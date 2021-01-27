@@ -1,0 +1,22 @@
+#(cd ..; git submodule sync --recursive)
+#(cd ..; git submodule update --init  --recursive )
+
+
+module purge
+module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0
+
+
+##-DMATHBACKEND=6  -DWITH_COVTEST=ON
+cmake -DWITH_NTL=ON -DWITH_NATIVEOPT=ON  \
+      -DBUILD_EXTRAS=ON -DBUILD_BENCHMARKS=ON -DBUILD_EXAMPLES=ON -DBUILD_UNITTESTS=ON \
+      -DCMAKE_INSTALL_PREFIX=/pkg/gcc9/palisade_dev \
+      ..
+
+make gmp_unpack; make gmp_all -j8
+make ntl_unpack; make ntl_all -j8
+
+make -j16
+make allextras
+
+#make install
+#make allbenchmark

@@ -1,0 +1,23 @@
+module purge
+module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0
+
+PALISADE=/pkg/gcc9/palisade_dev
+export LD_LIBRARY_PATH=${PALISADE}/lib:${LD_LIBRARY_PATH}
+
+
+TARGET="HE_sigmoid"
+
+
+for t in ${TARGET}; do
+  g++  ${t}.cpp -o ${t} -L${PALISADE}/lib -fopenmp \
+   -Wl,-rpath=${PALISADE}/lib \
+   -lPALISADEpke -lPALISADEcore -lntl \
+   -I${PALISADE}/include \
+   -I${PALISADE}/include/palisade \
+   -I${PALISADE}/include/palisade/pke \
+   -I${PALISADE}/include/palisade/core  \
+   -I${PALISADE}/include/palisade/third-party/include
+done
+
+
+

@@ -36,24 +36,26 @@ int main(int argc, char* argv[]) {
         scaleFactor = atoi(argv[3]);
     }
 
+    //**************************************************
     //
     // Instantiate the crypto context and key generation
     //
+    //**************************************************
     SecurityLevel securityLevel = HEStd_128_classic;
     usint plaintextModulus = 536903681;
     double sigma = 3.2;
 
-    usint nMults = 4;        // max 2-depth tower
-    usint maxdepth = 3;      // max key for s^2
+    usint nMults = 5;        // max depth of tower
+    usint maxdepth = 5;      // max key for s^i
 
-    usint numLargeDigits = 0;
+    usint numLargeDigits = 2;
     usint firstModSize = 0;
     usint relinWindow = 0;   /* 0 means using CRT */
     usint ringDimension = 0;   // default 8192 for std_128, but also depend on sf
     usint dcrtBits = 60;
 
-    std::cout << "======= Simple HE sum of sigmoid(x) ======" << endl;
-    std::cout << "Initializing crypto context..." << endl;
+    cout << "======= Simple HE sum of sigmoid(x) ======" << endl;
+    cout << "Initializing crypto context..." << endl;
 
     auto cc = CryptoContextFactory<DCRTPoly>::genCryptoContextCKKS(
             nMults, scaleFactor, batchSize, securityLevel, ringDimension,
@@ -63,17 +65,22 @@ int main(int argc, char* argv[]) {
 
     cc->Enable(ENCRYPTION);
     cc->Enable(SHE);
-    cc->Enable(LEVELEDSHE);   // Not for BFV
+    cc->Enable(LEVELEDSHE);
 
     // Output the generated parameters
     auto ccParam = cc->GetCryptoParameters();
-    std::cout << "   Ring dimension : " << cc->GetRingDimension() << std::endl;
-    std::cout << "   p     : " << ccParam->GetPlaintextModulus() << std::endl;
-    std::cout << "   log2q : " << log2(cc->GetModulus().ConvertToDouble())  << std::endl;
+    cout << "   Ring dimension : " << cc->GetRingDimension() << endl;
+    cout << "   p     : " << ccParam->GetPlaintextModulus() << endl;
+    cout << "   log2q : " << log2(cc->GetModulus().ConvertToDouble())  << endl;
 
     int num_batch = N/batchSize + int(N%batchSize!=0);
     cout << "   len(x) / batchSize / #batch : " << N << " // " << batchSize << " = " << num_batch << endl;
 
+    //**************************************************
+    //
+    // Key generation
+    //
+    //**************************************************
     cout << "Generating key pair ..." << endl;
     TIC(t1);
     LPKeyPair<DCRTPoly> keyPair = cc->KeyGen();
@@ -89,9 +96,11 @@ int main(int argc, char* argv[]) {
     cc->EvalMultKeyGen(keyPair.secretKey);
     DURATION tMultKG = TOC(t1);
 
+    //**************************************************
     //
-    // Prepare rotation key for merging partial sum in each batch
+    // Full rotation key for merging partial sum in each batch
     //
+    //**************************************************
     cout << "Generating full rotation keys ..." << endl;
     TIC(t1);
     vector<int> ilist(num_batch-1);
@@ -102,13 +111,15 @@ int main(int argc, char* argv[]) {
 
 
     cout << "Generating DP random vector ..." << endl;
-    std::vector<double> x(N);
+    vector<double> x(N);
     #pragma omp parallel for
     for (int i=0; i<N; i++) x[i] = (double) (rand()-RAND_MAX/2) / (RAND_MAX);
 
+    //**************************************************
     //
     // Caculate \sum sigmoid(x) w/o HE
     //
+    //**************************************************
     double exact_sum = 0.;
     usint  exact_flop = 7*N;
     TIC(t);
@@ -119,30 +130,34 @@ int main(int argc, char* argv[]) {
     DURATION tDP = TOC(t);
     cout << "Sum(sigmoid(x)) w/o HE = " << setprecision(16) << exact_sum << endl;
 
+    //**************************************************
     //
     // Packing data into ciphertexts
     //
+    //**************************************************
     TIC(t);
     cout << "Pack and encrypt data by batch ";
-    std::vector<Ciphertext<DCRTPoly>> ctx(num_batch);
+    vector<Ciphertext<DCRTPoly>> ctx(num_batch);
 
     #pragma omp parallel for
     for (int i=0; i<num_batch; i++) {
         cout << ".";
 
-        std::vector<double> xbatch = {x.begin() + i*batchSize, (i==(num_batch-1))? x.end(): x.begin() + (i+1)*batchSize };
+        vector<double> xbatch = {x.begin() + i*batchSize, (i==(num_batch-1))? x.end(): x.begin() + (i+1)*batchSize };
         Plaintext ptx = cc->MakeCKKSPackedPlaintext(xbatch);
         ctx[i] = cc->Encrypt(keyPair.publicKey, ptx);
     }
     DURATION tEncAll = TOC(t);
     cout <<endl;
 
+    //**************************************************
     //
     // HE partial sum per batch
     //
+    //**************************************************
     cout << "Compute batch sum ";
     TIC(t);
-    std::vector<Ciphertext<DCRTPoly>> bctsum(num_batch);
+    vector<Ciphertext<DCRTPoly>> bctsum(num_batch);
     #pragma omp parallel for
     for (int i=0; i<num_batch; i++) {
         cout << ".";
@@ -175,7 +190,7 @@ int main(int argc, char* argv[]) {
 
     double he = res->GetCKKSPackedValue()[0].real();
 
-    std::cout << setprecision(16) << he << "  HE-EXACT= "
+    cout << setprecision(16) << he << "  HE-EXACT= "
         << setprecision(6) << (he-exact_sum)
         << "  ( Rel. err= "<< 100.0*(he-exact_sum)/exact_sum << " % )" <<  endl;
 
@@ -195,6 +210,7 @@ int main(int argc, char* argv[]) {
     cout << endl;
     printf("doubel MFlops/core: %.4f\n", exact_flop/tDP.count()/ncore*1e-6 );
     printf("HE     KFlops/core: %.4f\n", exact_flop/(tEvalAll.count()+tMerge.count())/ncore*1e-3   );
+
 
 
     cout << endl;

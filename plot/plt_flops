@@ -1,0 +1,19 @@
+source /pkg/ENV/pycbc_py2/init
+
+#grep TimeSummary ../fhe_time_ckks2.dat > ./timing_ckks.dat
+#grep TimeSummary ../fhe_time_bfv.dat > ./timing_bfv.dat
+#grep TimeSummary ../fhe_time_sigmoid.dat > ./timing_sigmoid.dat
+
+python plt_flops.py sigmoid timing_sigmoid.dat
+python plt_flops.py bfv timing_bfv.dat
+python plt_flops.py ckks timing_ckks.dat
+
+
+
+#grep TimeSummary ./twcc/twcc_ckks.log > twcc_ckks.dat
+#grep TimeSummary ./twcc/twcc_bfv.log > twcc_bfv.dat
+#grep TimeSummary ./twcc/twcc_sigmoid.log > twcc_sigmoid.dat
+
+python plt_flops.py twcc_ckks twcc_ckks.dat
+python plt_flops.py twcc_bfv twcc_bfv.dat
+python plt_flops.py twcc_sigmoid twcc_sigmoid.dat

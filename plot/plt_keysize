@@ -1,0 +1,4 @@
+source /pkg/ENV/pycbc_py2/init
+
+python plt_keysize.py keysize.dat
+

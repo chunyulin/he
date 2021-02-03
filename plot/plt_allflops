@@ -1,0 +1,7 @@
+source /pkg/ENV/pycbc_py2/init
+
+#grep TimeSummary ../fhe_time_ckks.log > ./timing_ckks.dat
+#grep TimeSummary ../fhe_time_bfv.log > ./timing_bfv.dat
+
+python plt_allflops.py
+

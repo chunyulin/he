@@ -1,0 +1,15 @@
+source /pkg/ENV/pycbc_py2/init
+
+#grep TimeSummary ../fhe_time_bfv.dat > ./timing_bfv.dat
+#grep TimeSummary ../fhe_time_sigmoid.dat > ./timing_sigmoid.dat
+#grep TimeSummary ../fhe_time_ckks.dat > ./timing_ckks.dat
+
+
+#python plt_timing.py sigmoid timing_sigmoid.dat
+##python plt_timing.py bfv timing_bfv.dat
+#python plt_timing.py ckks timing_ckks.dat
+
+
+
+#grep TimeSummary ./twcc/twcc_ckks.dat > twcc_ckks.dat
+#python plt_timing.py twcc_ckks twcc_ckks.dat

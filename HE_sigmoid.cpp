@@ -15,6 +15,7 @@ std::chrono::time_point<std::chrono::system_clock>  tc, tw, t, t1;
 
 #undef TIC
 #undef TOC
+//#define TIC(t) { t = std::chrono::system_clock::now(); std::time_t tnow = std::chrono::system_clock::to_time_t(t);  cout << "[" << std::ctime(&tnow) << "] "; }
 #define TIC(t) t = std::chrono::system_clock::now();
 #define TOC(t) (std::chrono::system_clock::now() - t)
 
@@ -46,7 +47,7 @@ int main(int argc, char* argv[]) {
     double sigma = 3.2;
 
     usint nMults = 5;        // max depth of tower
-    usint maxdepth = 5;      // max key for s^i
+    usint maxdepth = 3;      // max key for s^i
 
     usint numLargeDigits = 2;
     usint firstModSize = 0;
@@ -74,25 +75,25 @@ int main(int argc, char* argv[]) {
     cout << "   log2q : " << log2(cc->GetModulus().ConvertToDouble())  << endl;
 
     int num_batch = N/batchSize + int(N%batchSize!=0);
-    cout << "   len(x) / batchSize / #batch : " << N << " // " << batchSize << " = " << num_batch << endl;
+    cout << "   len(x) / batchSize / #batch : " << N << " // " << batchSize << " = " << num_batch << endl << endl;
 
     //**************************************************
     //
     // Key generation
     //
     //**************************************************
-    cout << "Generating key pair ..." << endl;
     TIC(t1);
+    cout << "Generating key pair ..." << endl;
     LPKeyPair<DCRTPoly> keyPair = cc->KeyGen();
     DURATION tKG = TOC(t1);
 
-    cout << "Generating sum key ..." << endl;
     TIC(t1);
+    cout << "Generating sum key ..." << endl;
     cc->EvalSumKeyGen(keyPair.secretKey);
     DURATION tSumKG = TOC(t1);
 
-    cout << "Generating mult key ..." << endl;
     TIC(t1);
+    cout << "Generating mult key ..." << endl;
     cc->EvalMultKeyGen(keyPair.secretKey);
     DURATION tMultKG = TOC(t1);
 
@@ -101,8 +102,8 @@ int main(int argc, char* argv[]) {
     // Full rotation key for merging partial sum in each batch
     //
     //**************************************************
-    cout << "Generating full rotation keys ..." << endl;
     TIC(t1);
+    cout << "Generating full rotation keys ..." << endl << endl;
     vector<int> ilist(num_batch-1);
     #pragma omp parallel for
     for (int i=0;i<num_batch-1;i++) ilist[i]=-(i+1);
@@ -110,25 +111,28 @@ int main(int argc, char* argv[]) {
     DURATION tRotKG = TOC(t1);
 
 
+    TIC(t1);
     cout << "Generating DP random vector ..." << endl;
     vector<double> x(N);
     #pragma omp parallel for
     for (int i=0; i<N; i++) x[i] = (double) (rand()-RAND_MAX/2) / (RAND_MAX);
+    DURATION tDummy = TOC(t1);
 
     //**************************************************
     //
     // Caculate \sum sigmoid(x) w/o HE
     //
     //**************************************************
+    TIC(t);
+    cout << "Native computation w/o HE ..." << endl;
     double exact_sum = 0.;
     usint  exact_flop = 7*N;
-    TIC(t);
     #pragma omp parallel for reduction(+ : exact_sum)
     for (int i=0; i<N; i++) {
         exact_sum += 0.5 + 0.25*x[i]*(1.0 + 0.08333333333333*x[i]*x[i]);
     }
     DURATION tDP = TOC(t);
-    cout << "Sum(sigmoid(x)) w/o HE = " << setprecision(16) << exact_sum << endl;
+    cout << "Sum(sigmoid(x)) w/o HE = " << setprecision(16) << exact_sum << endl << endl;
 
     //**************************************************
     //
@@ -148,42 +152,43 @@ int main(int argc, char* argv[]) {
         ctx[i] = cc->Encrypt(keyPair.publicKey, ptx);
     }
     DURATION tEncAll = TOC(t);
-    cout <<endl;
+    cout <<endl << endl;
 
     //**************************************************
     //
     // HE partial sum per batch
     //
     //**************************************************
-    cout << "Compute batch sum ";
     TIC(t);
+    cout << "Compute batch sum ";
     vector<Ciphertext<DCRTPoly>> bctsum(num_batch);
     #pragma omp parallel for
     for (int i=0; i<num_batch; i++) {
         cout << ".";
 
 	// can be implemented inside the library to reduce overhead
-        auto xo4     = cc->EvalMult(0.25, ctx[i]);
-        auto x2      = cc->EvalMult(ctx[i], ctx[i]);
-        auto x2o12   = cc->EvalMult(0.08333333333333, x2);
-        auto x2o12p1 = cc->EvalAdd(1.0, x2o12);
-        auto tmp  = cc->EvalMult(xo4, x2o12p1);
-        auto pp   = cc->EvalAdd(0.5, tmp);
-        auto bsum = cc->EvalSum(pp, batchSize);
+        //auto xo4     = cc->EvalMult(0.25, ctx[i]);
+        //auto x2      = cc->EvalMult(ctx[i], ctx[i]);
+        //auto x2o12   = cc->EvalMult(0.08333333333333, x2);
+        //auto x2o12p1 = cc->EvalAdd(1.0, x2o12);
+        //auto tmp  = cc->EvalMult(xo4, x2o12p1);
+        //auto pp   = cc->EvalAdd(0.5, tmp);
+        //bctsum[i] = cc->EvalSum(pp, batchSize);
 
-        bctsum[i] = bsum;
+        auto pp   = 0.5 + 0.25*ctx[i]*(0.08333333333333*ctx[i]*ctx[i] + 1.0);
+        bctsum[i] = cc->EvalSum(pp, batchSize);
     }
-    cout <<endl;
+    cout <<endl << endl;
     DURATION tEvalAll = TOC(t);
 
-    cout << "Merging partial sum." << endl;
     TIC(t);
+    cout << "Merging partial sum." << endl << endl;
     auto ctsum = cc->EvalSum(cc->EvalMerge(bctsum), num_batch);
     DURATION tMerge = TOC(t);
 
 
-    cout << "Decrypt HE Sum(sigmoid(x)) = ";
     TIC(t);
+    cout << "Decrypt HE Sum(sigmoid(x)) = ";
     Plaintext res;
     cc->Decrypt(keyPair.secretKey, ctsum, &res);
     DURATION tDec = TOC(t);
@@ -192,10 +197,10 @@ int main(int argc, char* argv[]) {
 
     cout << setprecision(16) << he << "  HE-EXACT= "
         << setprecision(6) << (he-exact_sum)
-        << "  ( Rel. err= "<< 100.0*(he-exact_sum)/exact_sum << " % )" <<  endl;
+        << "  ( Rel. err= "<< 100.0*(he-exact_sum)/exact_sum << " % )" <<  endl << endl;
 
     cout << "=== Timing (s):" << endl;
-    cout << "RotKeyGen per batch: " << tRotKG.count() <<endl;
+    cout << "RotKey Gen         : " << tRotKG.count() <<endl;
     cout << "SumKey  Gen        : " << tSumKG.count() <<endl;
     cout << "MultKey Gen        : " << tMultKG.count() <<endl;
     cout << "Pub/Sec Gen        : " << tKG.count() <<endl;
@@ -213,7 +218,7 @@ int main(int argc, char* argv[]) {
 
 
 
-    cout << endl;
+    cout << endl << endl;
     cout << "[TimeSummary] " << ncore << " " 
          << cc->GetRingDimension() << " "
          << ccParam->GetPlaintextModulus() << " " << log2(cc->GetModulus().ConvertToDouble())  << " "

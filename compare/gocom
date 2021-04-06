@@ -24,8 +24,5 @@ g++  ${TARGET}.cpp -O3 -std=c++17  -o ${TARGET} -fopenmp -L${PALISADE}/lib  \
 }
 
 
-export LD_LIBRARY_PATH=/pkg/gcc9/palisade-1.11.0_NTL/lib:${LD_LIBRARY_PATH}
-
-
 palisade
 seal

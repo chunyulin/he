@@ -1,0 +1,693 @@
+cpu-bind=MASK - ib03, task  0  0 [29065]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+# of Cores        : 1
+   Ring dimension : 16384
+   log2q : 159
+   ScaleFactor[T] : [p=39 rootP =0 bigP =0 rootBigP =0 g=0 L=8192]
+   len(x) / batchSize / #batch : 16384 // 8192 = 2
+
+Generating key pair ...
+Generating sum key ...
+Generating mult key ...
+Native computation w/o HE ...
+
+
+CKKS Result : 1359.655695
+Raw  Result : 1359.655709
+Error: -1.405930220244045e-05
+======== Time in secs ========
+Public Key        : 0.011551845
+Secret Key Gen    : 0
+Rotation Key      : 0.38728917
+Relinearilzation  : 0.029714235
+
+Prepare Input     : 0
+Encode/Encrypt    : 0.02741102
+Decode/Decrypt    : 0.044369655
+Compute  per b    : 0.0224843275
+EvalSum           : 0.281707535
+Total: 0.85318489
+[PALISADE_Summary] 2 0.011551845 0.38728917 0.029714235 0.02741102 0.044369655 0.044968655 0.281707535 0.85318489 4.927e-05 -1.405930220244045e-05
+cpu-bind=MASK - ib03, task  0  0 [29084]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+==== # of cores   : 1 ==== 
+==== # of threads : 1 ==== 
+
+ ==== Elapsed time for creating SEALContext ==== 
+=================================================
+Public Key        : 0.00881943
+Secret Key Gen    : 0.00017418
+Rotation Key      : 0.693175
+Relinearilzation  : 0.0270095
+==== Number of slots: 8192
+==== End of key generation & context creation ====
+==================================================
+# of data  : 16384
+num_batch  : 2
+slot_count : 8192
+End of encode/encrypt...
+Compute x^2 and relinearize...
+CKKS Result : 1368.447316
+Raw  Result : 1368.447284
+Error: 3.162656753374904e-05
+======== Time in secs ========
+Public Key        : 0.00881943
+Secret Key Gen    : 0.00017418
+Rotation Key      : 0.693174935
+Relinearilzation  : 0.027009455
+
+Prepare Input     : 0
+Encode/Encrypt    : 0.041740545
+Decode/Decrypt    : 0.003968135
+Compute  per b    : 0.01401524
+EvalSum           : 0.10347237
+Total: 0.963242445
+[SEAL_Summary] 2 0.008993609999999999 0.693174935 0.027009455 0.041740545 0.003968135 0.02803048 0.10347237 0.963242445 6.021e-05  3.162656753374904e-05
+cpu-bind=MASK - ib03, task  0  0 [29103]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+# of Cores        : 1
+   Ring dimension : 16384
+   log2q : 159
+   ScaleFactor[T] : [p=39 rootP =0 bigP =0 rootBigP =0 g=0 L=8192]
+   len(x) / batchSize / #batch : 32768 // 8192 = 4
+
+Generating key pair ...
+Generating sum key ...
+Generating mult key ...
+Native computation w/o HE ...
+
+
+CKKS Result : 2731.664233
+Raw  Result : 2731.664253
+Error: -2.012504955928307e-05
+======== Time in secs ========
+Public Key        : 0.01146521
+Secret Key Gen    : 0
+Rotation Key      : 0.38439888
+Relinearilzation  : 0.029576525
+
+Prepare Input     : 0
+Encode/Encrypt    : 0.054473605
+Decode/Decrypt    : 0.0435437
+Compute  per b    : 0.02257820375
+EvalSum           : 0.28168454
+Total: 0.9220985350000001
+[PALISADE_Summary] 4 0.01146521 0.38439888 0.029576525 0.054473605 0.0435437 0.090312815 0.28168454 0.9220985350000001 9.439499999999999e-05 -2.012504955928307e-05
+cpu-bind=MASK - ib03, task  0  0 [29122]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+==== # of cores   : 1 ==== 
+==== # of threads : 1 ==== 
+
+ ==== Elapsed time for creating SEALContext ==== 
+=================================================
+Public Key        : 0.00880108
+Secret Key Gen    : 0.00017669
+Rotation Key      : 0.693882
+Relinearilzation  : 0.0270613
+==== Number of slots: 8192
+==== End of key generation & context creation ====
+==================================================
+# of data  : 32768
+num_batch  : 4
+slot_count : 8192
+End of encode/encrypt...
+Compute x^2 and relinearize...
+CKKS Result : 2710.812686
+Raw  Result : 2710.812657
+Error: 2.966484680655412e-05
+======== Time in secs ========
+Public Key        : 0.008801079999999999
+Secret Key Gen    : 0.00017669
+Rotation Key      : 0.693882355
+Relinearilzation  : 0.027061275
+
+Prepare Input     : 0
+Encode/Encrypt    : 0.08321591
+Decode/Decrypt    : 0.00396988
+Compute  per b    : 0.01409948375
+EvalSum           : 0.10556719
+Total: 1.038943065
+[SEAL_Summary] 4 0.00897777 0.693882355 0.027061275 0.08321591 0.00396988 0.056397935 0.10556719 1.038943065 0.000102295  2.966484680655412e-05
+cpu-bind=MASK - ib03, task  0  0 [29141]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+# of Cores        : 1
+   Ring dimension : 16384
+   log2q : 159
+   ScaleFactor[T] : [p=39 rootP =0 bigP =0 rootBigP =0 g=0 L=8192]
+   len(x) / batchSize / #batch : 65536 // 8192 = 8
+
+Generating key pair ...
+Generating sum key ...
+Generating mult key ...
+Native computation w/o HE ...
+
+
+CKKS Result : 5463.104340
+Raw  Result : 5463.104336
+Error: 3.191763426002581e-06
+======== Time in secs ========
+Public Key        : 0.01139324
+Secret Key Gen    : 0
+Rotation Key      : 0.38356458
+Relinearilzation  : 0.029444005
+
+Prepare Input     : 0
+Encode/Encrypt    : 0.109137955
+Decode/Decrypt    : 0.0437617
+Compute  per b    : 0.02249366125
+EvalSum           : 0.281315095
+Total: 1.06691924
+[PALISADE_Summary] 8 0.01139324 0.38356458 0.029444005 0.109137955 0.0437617 0.17994929 0.281315095 1.06691924 0.000182695 3.191763426002581e-06
+cpu-bind=MASK - ib03, task  0  0 [29160]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+==== # of cores   : 1 ==== 
+==== # of threads : 1 ==== 
+
+ ==== Elapsed time for creating SEALContext ==== 
+=================================================
+Public Key        : 0.00878807
+Secret Key Gen    : 0.00016612
+Rotation Key      : 0.692203
+Relinearilzation  : 0.0270657
+==== Number of slots: 8192
+==== End of key generation & context creation ====
+==================================================
+# of data  : 65536
+num_batch  : 8
+slot_count : 8192
+End of encode/encrypt...
+Compute x^2 and relinearize...
+CKKS Result : 5447.731953
+Raw  Result : 5447.731974
+Error: -2.108638545905706e-05
+======== Time in secs ========
+Public Key        : 0.008788074999999999
+Secret Key Gen    : 0.00016612
+Rotation Key      : 0.69220277
+Relinearilzation  : 0.02706571
+
+Prepare Input     : 0
+Encode/Encrypt    : 0.16573002
+Decode/Decrypt    : 0.00391468
+Compute  per b    : 0.01410314875
+EvalSum           : 0.10532289
+Total: 1.177204185
+[SEAL_Summary] 8 0.008954195 0.69220277 0.02706571 0.16573002 0.00391468 0.11282519 0.10532289 1.177204185 0.00019234  -2.108638545905706e-05
+cpu-bind=MASK - ib03, task  0  0 [29179]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+# of Cores        : 1
+   Ring dimension : 16384
+   log2q : 159
+   ScaleFactor[T] : [p=39 rootP =0 bigP =0 rootBigP =0 g=0 L=8192]
+   len(x) / batchSize / #batch : 131072 // 8192 = 16
+
+Generating key pair ...
+Generating sum key ...
+Generating mult key ...
+Native computation w/o HE ...
+
+
+CKKS Result : 10911.579276
+Raw  Result : 10911.579244
+Error: 3.172104334225878e-05
+======== Time in secs ========
+Public Key        : 0.011463865
+Secret Key Gen    : 0
+Rotation Key      : 0.384996155
+Relinearilzation  : 0.029637255
+
+Prepare Input     : 0
+Encode/Encrypt    : 0.218090855
+Decode/Decrypt    : 0.043716225
+Compute  per b    : 0.022461425
+EvalSum           : 0.281172085
+Total: 1.359263355
+[PALISADE_Summary] 16 0.011463865 0.384996155 0.029637255 0.218090855 0.043716225 0.3593828 0.281172085 1.359263355 0.000361105 3.172104334225878e-05
+cpu-bind=MASK - ib03, task  0  0 [29199]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+==== # of cores   : 1 ==== 
+==== # of threads : 1 ==== 
+
+ ==== Elapsed time for creating SEALContext ==== 
+=================================================
+Public Key        : 0.00881056
+Secret Key Gen    : 0.00016579
+Rotation Key      : 0.692378
+Relinearilzation  : 0.0270254
+==== Number of slots: 8192
+==== End of key generation & context creation ====
+==================================================
+# of data  : 131072
+num_batch  : 16
+slot_count : 8192
+End of encode/encrypt...
+Compute x^2 and relinearize...
+CKKS Result : 10946.965741
+Raw  Result : 10946.965724
+Error: 1.666949538048357e-05
+======== Time in secs ========
+Public Key        : 0.00881056
+Secret Key Gen    : 0.00016579
+Rotation Key      : 0.6923781449999999
+Relinearilzation  : 0.02702541
+
+Prepare Input     : 0
+Encode/Encrypt    : 0.333189205
+Decode/Decrypt    : 0.00399674
+Compute  per b    : 0.0140881
+EvalSum           : 0.10403053
+Total: 1.45892727
+[SEAL_Summary] 16 0.008976350000000001 0.6923781449999999 0.02702541 0.333189205 0.00399674 0.2254096 0.10403053 1.45892727 0.00037  1.666949538048357e-05
+cpu-bind=MASK - ib03, task  0  0 [29218]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+# of Cores        : 1
+   Ring dimension : 16384
+   log2q : 159
+   ScaleFactor[T] : [p=39 rootP =0 bigP =0 rootBigP =0 g=0 L=8192]
+   len(x) / batchSize / #batch : 262144 // 8192 = 32
+
+Generating key pair ...
+Generating sum key ...
+Generating mult key ...
+Native computation w/o HE ...
+
+
+CKKS Result : 21803.298728
+Raw  Result : 21803.298762
+Error: -3.405745883355848e-05
+======== Time in secs ========
+Public Key        : 0.011489195
+Secret Key Gen    : 0
+Rotation Key      : 0.38509617
+Relinearilzation  : 0.02961991
+
+Prepare Input     : 0
+Encode/Encrypt    : 0.43574695
+Decode/Decrypt    : 0.043759585
+Compute  per b    : 0.0225473925
+EvalSum           : 0.28138897
+Total: 1.94474902
+[PALISADE_Summary] 32 0.011489195 0.38509617 0.02961991 0.43574695 0.043759585 0.72151656 0.28138897 1.94474902 0.000717975 -3.405745883355848e-05
+cpu-bind=MASK - ib03, task  0  0 [29237]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+==== # of cores   : 1 ==== 
+==== # of threads : 1 ==== 
+
+ ==== Elapsed time for creating SEALContext ==== 
+=================================================
+Public Key        : 0.00888425
+Secret Key Gen    : 0.00016735
+Rotation Key      : 0.69379
+Relinearilzation  : 0.0270308
+==== Number of slots: 8192
+==== End of key generation & context creation ====
+==================================================
+# of data  : 262144
+num_batch  : 32
+slot_count : 8192
+End of encode/encrypt...
+Compute x^2 and relinearize...
+CKKS Result : 21819.626408
+Raw  Result : 21819.626428
+Error: -1.98868328880053e-05
+======== Time in secs ========
+Public Key        : 0.008884245000000001
+Secret Key Gen    : 0.00016735
+Rotation Key      : 0.693789655
+Relinearilzation  : 0.027030765
+
+Prepare Input     : 0
+Encode/Encrypt    : 0.66580862
+Decode/Decrypt    : 0.003978255
+Compute  per b    : 0.0140889478125
+EvalSum           : 0.10432035
+Total: 2.021305935
+[SEAL_Summary] 32 0.009051595000000001 0.693789655 0.027030765 0.66580862 0.003978255 0.45084633 0.10432035 2.021305935 0.00072632  -1.98868328880053e-05
+cpu-bind=MASK - ib03, task  0  0 [29256]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+# of Cores        : 1
+   Ring dimension : 16384
+   log2q : 159
+   ScaleFactor[T] : [p=39 rootP =0 bigP =0 rootBigP =0 g=0 L=8192]
+   len(x) / batchSize / #batch : 524288 // 8192 = 64
+
+Generating key pair ...
+Generating sum key ...
+Generating mult key ...
+Native computation w/o HE ...
+
+
+CKKS Result : 43645.689436
+Raw  Result : 43645.689405
+Error: 3.076564462389797e-05
+======== Time in secs ========
+Public Key        : 0.011561125
+Secret Key Gen    : 0
+Rotation Key      : 0.38518131
+Relinearilzation  : 0.02962756
+
+Prepare Input     : 0
+Encode/Encrypt    : 0.87173452
+Decode/Decrypt    : 0.044191445
+Compute  per b    : 0.022501129765625
+EvalSum           : 0.281395865
+Total: 3.11014007
+[PALISADE_Summary] 64 0.011561125 0.38518131 0.02962756 0.87173452 0.044191445 1.440072305 0.281395865 3.11014007 0.001433585 3.076564462389797e-05
+cpu-bind=MASK - ib03, task  0  0 [29277]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+==== # of cores   : 1 ==== 
+==== # of threads : 1 ==== 
+
+ ==== Elapsed time for creating SEALContext ==== 
+=================================================
+Public Key        : 0.00882013
+Secret Key Gen    : 0.000165925
+Rotation Key      : 0.693374
+Relinearilzation  : 0.0270237
+==== Number of slots: 8192
+==== End of key generation & context creation ====
+==================================================
+# of data  : 524288
+num_batch  : 64
+slot_count : 8192
+End of encode/encrypt...
+Compute x^2 and relinearize...
+CKKS Result : 43676.284053
+Raw  Result : 43676.284094
+Error: -4.133893526159227e-05
+======== Time in secs ========
+Public Key        : 0.008820135
+Secret Key Gen    : 0.000165925
+Rotation Key      : 0.693374305
+Relinearilzation  : 0.02702371
+
+Prepare Input     : 0
+Encode/Encrypt    : 1.332006915
+Decode/Decrypt    : 0.003905715
+Compute  per b    : 0.0140793475
+EvalSum           : 0.104069405
+Total: 3.14754165
+[SEAL_Summary] 64 0.008986060000000001 0.693374305 0.02702371 1.332006915 0.003905715 0.90107824 0.104069405 3.14754165 0.001438855  -4.133893526159227e-05
+cpu-bind=MASK - ib03, task  0  0 [29297]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+# of Cores        : 1
+   Ring dimension : 16384
+   log2q : 159
+   ScaleFactor[T] : [p=39 rootP =0 bigP =0 rootBigP =0 g=0 L=8192]
+   len(x) / batchSize / #batch : 1048576 // 8192 = 128
+
+Generating key pair ...
+Generating sum key ...
+Generating mult key ...
+Native computation w/o HE ...
+
+
+CKKS Result : 87348.242561
+Raw  Result : 87348.242581
+Error: -1.954843173734844e-05
+======== Time in secs ========
+Public Key        : 0.011460555
+Secret Key Gen    : 0
+Rotation Key      : 0.385124195
+Relinearilzation  : 0.02958465
+
+Prepare Input     : 0
+Encode/Encrypt    : 1.741283765
+Decode/Decrypt    : 0.044309675
+Compute  per b    : 0.0225166155078125
+EvalSum           : 0.28129162
+Total: 5.442617305
+[PALISADE_Summary] 128 0.011460555 0.385124195 0.02958465 1.741283765 0.044309675 2.882126785 0.28129162 5.442617305 0.002873275 -1.954843173734844e-05
+cpu-bind=MASK - ib03, task  0  0 [29316]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+==== # of cores   : 1 ==== 
+==== # of threads : 1 ==== 
+
+ ==== Elapsed time for creating SEALContext ==== 
+=================================================
+Public Key        : 0.00881129
+Secret Key Gen    : 0.000163575
+Rotation Key      : 0.693328
+Relinearilzation  : 0.0270329
+==== Number of slots: 8192
+==== End of key generation & context creation ====
+==================================================
+# of data  : 1048576
+num_batch  : 128
+slot_count : 8192
+End of encode/encrypt...
+Compute x^2 and relinearize...
+CKKS Result : 87336.296837
+Raw  Result : 87336.296859
+Error: -2.151404623873532e-05
+======== Time in secs ========
+Public Key        : 0.008811289999999999
+Secret Key Gen    : 0.000163575
+Rotation Key      : 0.693327885
+Relinearilzation  : 0.027032945
+
+Prepare Input     : 0
+Encode/Encrypt    : 2.66332565
+Decode/Decrypt    : 0.003988975
+Compute  per b    : 0.0140809124609375
+EvalSum           : 0.103987305
+Total: 5.40087925
+[SEAL_Summary] 128 0.008974864999999999 0.693327885 0.027032945 2.66332565 0.003988975 1.802356795 0.103987305 5.40087925 0.00287589  -2.151404623873532e-05
+cpu-bind=MASK - ib03, task  0  0 [29335]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+# of Cores        : 1
+   Ring dimension : 16384
+   log2q : 159
+   ScaleFactor[T] : [p=39 rootP =0 bigP =0 rootBigP =0 g=0 L=8192]
+   len(x) / batchSize / #batch : 1572864 // 8192 = 192
+
+Generating key pair ...
+Generating sum key ...
+Generating mult key ...
+Native computation w/o HE ...
+
+
+CKKS Result : 130910.161853
+Raw  Result : 130910.161897
+Error: -4.476103640627116e-05
+======== Time in secs ========
+Public Key        : 0.01150582
+Secret Key Gen    : 0
+Rotation Key      : 0.38327126
+Relinearilzation  : 0.02959069
+
+Prepare Input     : 0
+Encode/Encrypt    : 2.61065825
+Decode/Decrypt    : 0.04441391
+Compute  per b    : 0.022528613046875
+EvalSum           : 0.284045285
+Total: 7.77737498
+[PALISADE_Summary] 192 0.01150582 0.38327126 0.02959069 2.61065825 0.04441391 4.325493705 0.284045285 7.77737498 0.00431766 -4.476103640627116e-05
+cpu-bind=MASK - ib03, task  0  0 [29356]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+==== # of cores   : 1 ==== 
+==== # of threads : 1 ==== 
+
+ ==== Elapsed time for creating SEALContext ==== 
+=================================================
+Public Key        : 0.00878275
+Secret Key Gen    : 0.00016348
+Rotation Key      : 0.694248
+Relinearilzation  : 0.0270222
+==== Number of slots: 8192
+==== End of key generation & context creation ====
+==================================================
+# of data  : 1572864
+num_batch  : 192
+slot_count : 8192
+End of encode/encrypt...
+Compute x^2 and relinearize...
+CKKS Result : 131096.106408
+Raw  Result : 131096.106359
+Error: 4.888832336291671e-05
+======== Time in secs ========
+Public Key        : 0.008782750000000001
+Secret Key Gen    : 0.00016348
+Rotation Key      : 0.69424782
+Relinearilzation  : 0.027022245
+
+Prepare Input     : 0
+Encode/Encrypt    : 4.002884215
+Decode/Decrypt    : 0.00397523
+Compute  per b    : 0.014081357734375
+EvalSum           : 0.103892425
+Total: 7.66363552
+[SEAL_Summary] 192 0.008946230000000001 0.69424782 0.027022245 4.002884215 0.00397523 2.703620685 0.103892425 7.66363552 0.004288725  4.888832336291671e-05
+cpu-bind=MASK - ib03, task  0  0 [29375]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+# of Cores        : 1
+   Ring dimension : 16384
+   log2q : 159
+   ScaleFactor[T] : [p=39 rootP =0 bigP =0 rootBigP =0 g=0 L=8192]
+   len(x) / batchSize / #batch : 2097152 // 8192 = 256
+
+Generating key pair ...
+Generating sum key ...
+Generating mult key ...
+Native computation w/o HE ...
+
+
+CKKS Result : 174601.141549
+Raw  Result : 174601.141509
+Error: 4.033898585475981e-05
+======== Time in secs ========
+Public Key        : 0.011479815
+Secret Key Gen    : 0
+Rotation Key      : 0.385042515
+Relinearilzation  : 0.02958425
+
+Prepare Input     : 0
+Encode/Encrypt    : 3.49058539
+Decode/Decrypt    : 0.04406893
+Compute  per b    : 0.02252954396484375
+EvalSum           : 0.283387785
+Total: 10.12099352
+[PALISADE_Summary] 256 0.011479815 0.385042515 0.02958425 3.49058539 0.04406893 5.767563255 0.283387785 10.12099352 0.00579331 4.033898585475981e-05
+cpu-bind=MASK - ib03, task  0  0 [29395]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+==== # of cores   : 1 ==== 
+==== # of threads : 1 ==== 
+
+ ==== Elapsed time for creating SEALContext ==== 
+=================================================
+Public Key        : 0.00880769
+Secret Key Gen    : 0.00016692
+Rotation Key      : 0.694848
+Relinearilzation  : 0.0270024
+==== Number of slots: 8192
+==== End of key generation & context creation ====
+==================================================
+# of data  : 2097152
+num_batch  : 256
+slot_count : 8192
+End of encode/encrypt...
+Compute x^2 and relinearize...
+CKKS Result : 174768.020050
+Raw  Result : 174768.020016
+Error: 3.342077252455056e-05
+======== Time in secs ========
+Public Key        : 0.00880769
+Secret Key Gen    : 0.00016692
+Rotation Key      : 0.694847585
+Relinearilzation  : 0.02700237
+
+Prepare Input     : 0
+Encode/Encrypt    : 5.321457695
+Decode/Decrypt    : 0.00397422
+Compute  per b    : 0.01408703869140625
+EvalSum           : 0.10408156
+Total: 9.90654921
+[SEAL_Summary] 256 0.008974609999999999 0.694847585 0.02700237 5.321457695 0.00397422 3.606281905 0.10408156 9.90654921 0.005726705  3.342077252455056e-05
+cpu-bind=MASK - ib03, task  0  0 [29415]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+# of Cores        : 1
+   Ring dimension : 16384
+   log2q : 159
+   ScaleFactor[T] : [p=39 rootP =0 bigP =0 rootBigP =0 g=0 L=8192]
+   len(x) / batchSize / #batch : 4194304 // 8192 = 512
+
+Generating key pair ...
+Generating sum key ...
+Generating mult key ...
+Native computation w/o HE ...
+
+
+CKKS Result : 349455.818859
+Raw  Result : 349455.818725
+Error: 0.0001346531789749861
+======== Time in secs ========
+Public Key        : 0.011656295
+Secret Key Gen    : 0
+Rotation Key      : 0.384923805
+Relinearilzation  : 0.029617005
+
+Prepare Input     : 0
+Encode/Encrypt    : 6.97556858
+Decode/Decrypt    : 0.04419612
+Compute  per b    : 0.02272606885742188
+EvalSum           : 0.28399186
+Total: 19.559671815
+[PALISADE_Summary] 512 0.011656295 0.384923805 0.029617005 6.97556858 0.04419612 11.635747255 0.28399186 19.559671815 0.011690535 0.0001346531789749861
+cpu-bind=MASK - ib03, task  0  0 [29436]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+==== # of cores   : 1 ==== 
+==== # of threads : 1 ==== 
+
+ ==== Elapsed time for creating SEALContext ==== 
+=================================================
+Public Key        : 0.00881918
+Secret Key Gen    : 0.000166005
+Rotation Key      : 0.693501
+Relinearilzation  : 0.0271866
+==== Number of slots: 8192
+==== End of key generation & context creation ====
+==================================================
+# of data  : 4194304
+num_batch  : 512
+slot_count : 8192
+End of encode/encrypt...
+Compute x^2 and relinearize...
+CKKS Result : 349624.377435
+Raw  Result : 349624.377446
+Error: -1.061754301190376e-05
+======== Time in secs ========
+Public Key        : 0.008819179999999999
+Secret Key Gen    : 0.000166005
+Rotation Key      : 0.693501485
+Relinearilzation  : 0.02718665
+
+Prepare Input     : 0
+Encode/Encrypt    : 10.64975489
+Decode/Decrypt    : 0.00405899
+Compute  per b    : 0.01407711962890625
+EvalSum           : 0.105607585
+Total: 18.920938165
+[SEAL_Summary] 512 0.008985185 0.693501485 0.02718665 10.64975489 0.00405899 7.20748525 0.105607585 18.920938165 0.01165629  -1.061754301190376e-05
+cpu-bind=MASK - ib03, task  0  0 [29455]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+# of Cores        : 1
+   Ring dimension : 16384
+   log2q : 159
+   ScaleFactor[T] : [p=39 rootP =0 bigP =0 rootBigP =0 g=0 L=8192]
+   len(x) / batchSize / #batch : 8388608 // 8192 = 1024
+
+Generating key pair ...
+Generating sum key ...
+Generating mult key ...
+Native computation w/o HE ...
+
+
+CKKS Result : 698970.446494
+Raw  Result : 698970.446260
+Error: 0.0002341747749596834
+======== Time in secs ========
+Public Key        : 0.011588055
+Secret Key Gen    : 0
+Rotation Key      : 0.385280455
+Relinearilzation  : 0.02958308
+
+Prepare Input     : 0
+Encode/Encrypt    : 13.9530722
+Decode/Decrypt    : 0.04399513
+Compute  per b    : 0.02261671348632812
+EvalSum           : 0.284189335
+Total: 38.22971198
+[PALISADE_Summary] 1024 0.011588055 0.385280455 0.02958308 13.9530722 0.04399513 23.15951461 0.284189335 38.22971198 0.02338473 0.0002341747749596834
+cpu-bind=MASK - ib03, task  0  0 [29478]: mask 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff set
+==== # of cores   : 1 ==== 
+==== # of threads : 1 ==== 
+
+ ==== Elapsed time for creating SEALContext ==== 
+=================================================
+Public Key        : 0.00880163
+Secret Key Gen    : 0.00017809
+Rotation Key      : 0.693616
+Relinearilzation  : 0.0271021
+==== Number of slots: 8192
+==== End of key generation & context creation ====
+==================================================
+# of data  : 8388608
+num_batch  : 1024
+slot_count : 8192
+End of encode/encrypt...
+Compute x^2 and relinearize...
+CKKS Result : 699595.491817
+Raw  Result : 699595.491830
+Error: -1.340173184871674e-05
+======== Time in secs ========
+Public Key        : 0.008801625
+Secret Key Gen    : 0.00017809
+Rotation Key      : 0.6936161
+Relinearilzation  : 0.02710209
+
+Prepare Input     : 0
+Encode/Encrypt    : 21.31946439
+Decode/Decrypt    : 0.00398761
+Compute  per b    : 0.01426517581054687
+EvalSum           : 0.105120545
+Total: 37.158494775
+[SEAL_Summary] 1024 0.008979715000000001 0.6936161 0.02710209 21.31946439 0.00398761 14.60754003 0.105120545 37.158494775 0.023396305  -1.340173184871674e-05

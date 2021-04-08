@@ -1,0 +1,6 @@
+source /pkg/ENV/pycbc_py2/init
+
+#grep "\[PALISADE_Summary\]" compare.log > tpali.dat
+#grep "\[SEAL_Summary\]"     compare.log > tseal.dat
+
+python plt_timing.py 

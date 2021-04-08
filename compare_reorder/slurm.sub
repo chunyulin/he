@@ -1,0 +1,19 @@
+#! /bin/bash
+#SBATCH -J compare
+#SBATCH -o compare.log
+#SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=252
+
+module purge
+module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0
+#export LD_LIBRARY_PATH=${PALISADE}/lib:${LD_LIBRARY_PATH}
+
+export OMP_NUM_THREADS=1
+
+#CORE="1 2 4 8 16 32 64 128 192 252"
+
+NBATCH="2 4 8 16 32 64 128 192 256 512 1024"
+for n in ${NBATCH}; do
+  srun --cpu-bind=v,ldoms ./pali_sq_sum ${n}
+  srun --cpu-bind=v,ldoms ./seal_sq_sum ${n}
+done
+

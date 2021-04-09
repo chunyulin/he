@@ -25,15 +25,18 @@ int main(int argc, char* argv[]) {
 
     srand(0);
     usint num_batch = 10;
-    usint nMults   = 1;        // max depth of tower
+    usint nMults   = 2;        // max depth of tower
     usint maxdepth = 2;        // max key for s^i : determines the capability of relinearization key.
-    usint scaleFactor = 39;
+    usint scaleFactor = 49;    // 39
+    usint batchSize = 4096;
+    int FIRSTBIT = 60;
 
     if (argc > 1) num_batch   = atoi(argv[1]);
-    if (argc > 2) scaleFactor = atoi(argv[2]);
-    if (argc > 3) nMults      = atoi(argv[3]);
+    if (argc > 2) nMults      = atoi(argv[2]);
+    if (argc > 3) batchSize   = atoi(argv[3]);
+    if (argc > 4) scaleFactor = atoi(argv[4]);
+    if (argc > 5) FIRSTBIT    = atoi(argv[5]);
 
-    usint batchSize = 8192;
     int ringDimension = 2* batchSize;
 
     TIC(t_global);
@@ -42,12 +45,11 @@ int main(int argc, char* argv[]) {
     //SecurityLevel securityLevel = HEStd_NotSet;
 
     usint numLargeDigits = nMults + 1;
-    int FIRSTBIT = 60;
     int relinwin = 0;
 
     auto cc = CryptoContextFactory<DCRTPoly>::genCryptoContextCKKS(
             nMults, scaleFactor, batchSize, securityLevel, ringDimension,
-            EXACTRESCALE, HYBRID, numLargeDigits, maxdepth, FIRSTBIT, relinwin, OPTIMIZED);
+            APPROXAUTO, BV, numLargeDigits, maxdepth, FIRSTBIT, relinwin, OPTIMIZED);
             //APPROXAUTO APPROXRESCALE EXACTRESCALE,       BV(Rd=8192),HYBRID
 
     cc->Enable(ENCRYPTION);
@@ -113,7 +115,6 @@ int main(int argc, char* argv[]) {
 
     #pragma omp parallel for
     for (int i=0; i<num_batch; i++) {
-//         cout << ".";
         vector<double> xbatch = {x.begin() + i*batchSize, (i==(num_batch-1))? x.end(): x.begin() + (i+1)*batchSize };
         Plaintext ptx = cc->MakeCKKSPackedPlaintext(xbatch);
         ctx[i] = cc->Encrypt(keyPair.publicKey, ptx);
@@ -138,10 +139,9 @@ int main(int argc, char* argv[]) {
     DURATION tEvalAll = TOC(t);
 
     TIC(t);
-    cc->RescaleInPlace(ctx2);
     auto ctsum = cc->EvalSum(ctx2, batchSize);
+    //cc->RescaleInPlace(ctsum);
     DURATION tMerge = TOC(t);
-
 
     TIC(t);
     Plaintext res;

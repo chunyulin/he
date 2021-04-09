@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     usint nMults   = 2;        // max depth of tower
     usint maxdepth = 2;        // max key for s^i : determines the capability of relinearization key.
     usint scaleFactor = 49;    // 39
-    usint batchSize = 4096;
+    usint batchSize = 8192;
     int FIRSTBIT = 60;
 
     if (argc > 1) num_batch   = atoi(argv[1]);

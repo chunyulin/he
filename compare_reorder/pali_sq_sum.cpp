@@ -23,33 +23,40 @@ using namespace lbcrypto;
 
 int main(int argc, char* argv[]) {
 
+#if defined(HAVE_INT128)
+cout << "HAVE_INT128 defined" << endl;
+#endif
+cout << "NATIVEINT = " << NATIVEINT << endl;
+
     srand(0);
     usint num_batch = 10;
-    usint nMults   = 2;        // max depth of tower
+    usint nMults   = 1;        // max depth of tower
     usint maxdepth = 2;        // max key for s^i : determines the capability of relinearization key.
     usint scaleFactor = 49;    // 39
     usint batchSize = 8192;
     int FIRSTBIT = 60;
+    usint numLargeDigits = nMults + 1;
+    int relinwin = 0;
 
     if (argc > 1) num_batch   = atoi(argv[1]);
     if (argc > 2) nMults      = atoi(argv[2]);
     if (argc > 3) batchSize   = atoi(argv[3]);
     if (argc > 4) scaleFactor = atoi(argv[4]);
     if (argc > 5) FIRSTBIT    = atoi(argv[5]);
+    if (argc > 6) numLargeDigits = atoi(argv[6]);
+    if (argc > 7) relinwin = atoi(argv[7]);
 
-    int ringDimension = 2* batchSize;
+    int ringDimension = 16384;//2* batchSize;
 
     TIC(t_global);
     
     SecurityLevel securityLevel = HEStd_128_classic;
     //SecurityLevel securityLevel = HEStd_NotSet;
 
-    usint numLargeDigits = nMults + 1;
-    int relinwin = 0;
 
     auto cc = CryptoContextFactory<DCRTPoly>::genCryptoContextCKKS(
             nMults, scaleFactor, batchSize, securityLevel, ringDimension,
-            APPROXAUTO, BV, numLargeDigits, maxdepth, FIRSTBIT, relinwin, OPTIMIZED);
+            APPROXRESCALE, BV, numLargeDigits, maxdepth, FIRSTBIT, relinwin, OPTIMIZED);
             //APPROXAUTO APPROXRESCALE EXACTRESCALE,       BV(Rd=8192),HYBRID
 
     cc->Enable(ENCRYPTION);
@@ -60,15 +67,18 @@ int main(int argc, char* argv[]) {
     auto ccParam = cc->GetCryptoParameters();
     cout << "# of Cores        : " << omp_get_max_threads() << endl;
     cout << "   Ring dimension : " << cc->GetRingDimension() << endl;
-    cout << "   log2q : " << log2( cc-> GetModulus().ConvertToDouble()) + FIRSTBIT << endl;
+    cout << "   log2q : " << log2( cc-> GetModulus().ConvertToDouble()) << endl ; //; + FIRSTBIT << endl;
+    cout << "  log2 q : " << ccParam->GetElementParams()->GetModulus().GetMSB() << endl;
+                                                              
     cout << "   ScaleFactor[T] : " << cc->GetEncodingParams() << endl;
     
     int N = batchSize*num_batch;
     
     std::vector<double> x(N);
-    #pragma omp parallel for
-    for (int i=0; i<N; i++) x[i] = (double) (rand()-RAND_MAX/2) / (RAND_MAX);
-
+    for (int i=0; i<N; i++) {
+       x[i] = double(rand())/RAND_MAX - 0.5;
+       //x[i] = double(1.0);
+     }
     cout << "   len(x) / batchSize / #batch : " << N << " // " << batchSize << " = " << num_batch << endl << endl;
 
     //**************************************************
@@ -115,8 +125,9 @@ int main(int argc, char* argv[]) {
 
     #pragma omp parallel for
     for (int i=0; i<num_batch; i++) {
-        vector<double> xbatch = {x.begin() + i*batchSize, (i==(num_batch-1))? x.end(): x.begin() + (i+1)*batchSize };
-        Plaintext ptx = cc->MakeCKKSPackedPlaintext(xbatch);
+        //vector<double> xbatch = {x.begin() + i*batchSize, (i==(num_batch-1))? x.end(): x.begin() + (i+1)*batchSize };
+        vector<double> xbatch = {x.begin() + i*batchSize, x.begin() + (i+1)*batchSize };
+        auto ptx = cc->MakeCKKSPackedPlaintext(xbatch);
         ctx[i] = cc->Encrypt(keyPair.publicKey, ptx);
     }
     DURATION tEncAll = TOC(t);
@@ -128,19 +139,20 @@ int main(int argc, char* argv[]) {
     //
     //**************************************************
     TIC(t);
-    auto ctx2 = cc->EvalMult(ctx[0], ctx[0]);
+    Ciphertext<DCRTPoly>  ctx2 = cc->EvalMultNoRelin(ctx[0], ctx[0]);
     //cc->RescaleInPlace(ctx2);
 
     for (int i = 1; i < num_batch; i++) {
-        auto tmp_ctx2 = cc->EvalMult(ctx[i], ctx[i]);
-        //cc->RescaleInPlace(tmp_ctx2);
+        Ciphertext<DCRTPoly> tmp_ctx2 = cc->EvalMultNoRelin(ctx[i], ctx[i]);
         cc->EvalAddInPlace(ctx2, tmp_ctx2);
     }
+
     DURATION tEvalAll = TOC(t);
 
     TIC(t);
+    ctx2 = cc->Relinearize(ctx2);  // for EvalAutomorphism in EvalSum, I guess
+    //cc->RescaleInPlace(ctx2);
     auto ctsum = cc->EvalSum(ctx2, batchSize);
-    //cc->RescaleInPlace(ctsum);
     DURATION tMerge = TOC(t);
 
     TIC(t);
@@ -165,10 +177,11 @@ int main(int argc, char* argv[]) {
     t_reduct_sum = tMerge;
     
     double error = he_result - raw_result;
+    double rerr  = (he_result - raw_result)/raw_result;
         
     printf( "CKKS Result : %.6f\n", he_result);
     printf( "Raw  Result : %.6f\n", raw_result);
-    cout << "Error: " << setprecision(16) << error << endl;
+    printf( "Rel Error (%) : %.3g\n", rerr*100);
         
     cout << "======== Time in secs ========" << endl;
     cout << "Public Key        : " << t_pk.count() <<endl;
@@ -186,7 +199,8 @@ int main(int argc, char* argv[]) {
     cout << "[PALISADE_Summary] " << num_batch  << " " 
                          << t_pk.count() << " "  <<  t_gk.count()<< " " << t_rk.count() << " "
                          << t_enc.count() << " " << t_dec.count()<< " " << t_batch_sum.count()<< " " <<  t_reduct_sum.count() << " " 
-                         << t_total.count() << " " << t_raw.count() << " " << error <<endl;
+                         << t_total.count() << " " << t_raw.count() << " " << error << " "
+                      << num_batch << " " <<  batchSize << " "<<  scaleFactor << " " << FIRSTBIT << " " << rerr << endl;
 
     return 0;
 }

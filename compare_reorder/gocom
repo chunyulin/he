@@ -16,12 +16,30 @@ g++ ${TARGET}.cpp -O3  -std=c++17 -o ${TARGET} -fopenmp  \
 palisade() {
 TARGET="pali_sq_sum"
 PALISADE=/pkg/he/palisade-1.11.0
-g++  ${TARGET}.cpp -O3 -std=c++17  -o ${TARGET} -fopenmp -L${PALISADE}/lib  \
+g++  ${TARGET}.cpp -O3 -std=c++17  -o ${TARGET} -fopenmp  \
    -L${PALISADE}/lib -lPALISADEpke -lPALISADEcore  -Wl,-rpath=${PALISADE}/lib \
    -I${PALISADE}/include -I${PALISADE}/include/palisade \
    -I${PALISADE}/include/palisade/pke -I${PALISADE}/include/palisade/core  \
    -I${PALISADE}/include/palisade/third-party/include
 }
 
-palisade
+pali() {
+TARGET="pali"
+PALISADE=/pkg/he/palisade-1.11.0
+g++  ${TARGET}.cpp -O3 -std=c++17  -o ${TARGET} -fopenmp  \
+   -L${PALISADE}/lib -lPALISADEpke -lPALISADEcore  -Wl,-rpath=${PALISADE}/lib \
+   -I${PALISADE}/include -I${PALISADE}/include/palisade \
+   -I${PALISADE}/include/palisade/pke -I${PALISADE}/include/palisade/core  \
+   -I${PALISADE}/include/palisade/third-party/include
+}
+
+he() {
+TARGET="helib_sq_sum"
+HELIB=/pkg/he/helib-2.1.0
+g++  ${TARGET}.cpp -O3 -std=c++17  -o ${TARGET} -fopenmp \
+   -L${HELIB}/lib -L${HELIB}/lib64 -lhelib -lntl -Wl,-rpath,${HELIB}/lib,-rpath,${HELIB}/lib64 \
+   -I${HELIB}/include
+}
+
+#palisade
 #seal

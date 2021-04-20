@@ -36,9 +36,18 @@ int main(int argc, char* argv[])
     cout << "==== # of cores   : " << num_cores   << " ==== " << endl;
     cout << "==== # of threads : " << num_threads << " ==== " << endl;
 
-    if (argc >= 3) {
-        num_threads = atoi(argv[1]);
-    }
+    int num_batch = 10;
+    int batchSize = 8192;
+    int sf = 39;
+
+    if (argc > 1) num_batch = atoi(argv[1]);
+    if (argc > 2) batchSize = atoi(argv[2]);
+    if (argc > 3) sf        = atoi(argv[3]);
+
+    double scale = pow(2.0, sf);
+
+
+
     TIC(t_global);
 
     //omp_set_num_threads(num_threads);
@@ -48,15 +57,12 @@ int main(int argc, char* argv[])
     EncryptionParameters parms(scheme_type::ckks);
 
     // Set prms for polynomial ring.
-    int batchSize = 8192;
-    size_t poly_modulus_degree = batchSize*2;
+    size_t poly_modulus_degree = 8192*2;
     parms.set_poly_modulus_degree(poly_modulus_degree);
 
-    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 60, 40, 40, 60 }));
+    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 60, 39, 39, 60 }));
     //auto p128 = seal::util::global_variables::GetDefaultCoeffModulus128();
     //parms.set_coeff_modulus( p128[16384] );
-
-    double scale = pow(2.0, 39);
 
     // Print the context.
     SEALContext context(parms);
@@ -105,12 +111,12 @@ int main(int argc, char* argv[])
     cout << "==== End of key generation & context creation ====" << endl;
     cout << "==================================================" << endl;
 
-    int num_batch = 10;
     if (argc > 1) num_batch = atoi(argv[1]);
     int N = batchSize*num_batch;
     std::vector<double> x(N);
 #pragma omp parallel for
-    for (int i=0; i<N; i++) x[i] = (double) (rand()-RAND_MAX/2) / (RAND_MAX);
+    for (int i=0; i<N; i++) x[i] = double(1.0);
+    //for (int i=0; i<N; i++) x[i] = (double) (rand()-RAND_MAX/2) / (RAND_MAX);
 
     // Encode & Encrypt.
     vector<Ciphertext> cipher_txts(num_batch);
@@ -164,13 +170,13 @@ int main(int argc, char* argv[])
 
     TIC(t_tmp);
     evaluator.square_inplace(cipher_txts[0]);
-    evaluator.relinearize_inplace(cipher_txts[0], relin_keys);
+    //evaluator.relinearize_inplace(cipher_txts[0], relin_keys);
     //evaluator.rescale_to_next_inplace(cipher_txts[0]);
 
     for (int i=1; i < num_batch; i++){
 
         evaluator.square_inplace(cipher_txts[i]);
-        evaluator.relinearize_inplace(cipher_txts[i], relin_keys);
+        //evaluator.relinearize_inplace(cipher_txts[i], relin_keys);
         //evaluator.rescale_to_next_inplace(cipher_txts[i]);
 
         evaluator.add(cipher_txts[0], cipher_txts[i], cipher_txts[0]);
@@ -179,6 +185,7 @@ int main(int argc, char* argv[])
 
 
     TIC(t_tmp);
+    evaluator.relinearize_inplace(cipher_txts[0], relin_keys);
     evaluator.rescale_to_next_inplace(cipher_txts[0]);
     Ciphertext rotated;
     /// sum the batch by rotation.
@@ -219,11 +226,11 @@ int main(int argc, char* argv[])
     cout << "Compute  per b    : " << t_batch_sum.count() / num_batch <<endl;
     cout << "EvalSum           : " << t_reduct_sum.count()  <<endl;
     
-    cout << "Total: " << t_total.count()  <<endl;
+    cout << "Total: " << t_total.count()  << endl;
 
     cout << "[SEAL_Summary] " << num_batch  << " "
                          << t_pk.count() + t_sk.count() << " " << t_gk.count()<< " " << t_rk.count() << " "
-                         << t_enc.count() << " " << t_dec.count()<< " " << t_batch_sum.count()<< " " <<  t_reduct_sum.count() << " "
+                         << t_enc.count()   << " " << t_dec.count()<< " " << t_batch_sum.count()<< " " <<  t_reduct_sum.count() << " "
                          << t_total.count() <<  " " << t_raw.count() << " " << error  << endl;
     return 0;
 }

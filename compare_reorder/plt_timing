@@ -1,7 +1,7 @@
 source /pkg/ENV/pycbc_py2/init
 
-grep "\[PALISADE_Summary\]" compare.log > tpali.dat
-grep "\[SEAL_Summary\]"     compare.log > tseal.dat
-grep "\[HElib_Summary\]"    compare.log > theli.dat
+grep "\[PALISADE_Summary\]" compare3.log > tp.dat
+grep "\[SEAL_Summary\]"     compare3.log > ts.dat
+grep "\[HElib_Summary\]"    compare3.log > th.dat
 
 python plt_timing.py 

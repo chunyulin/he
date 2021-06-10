@@ -16,9 +16,9 @@ COLS=12
 label = ["NB", "KeyG", "RotKeyG", "MultKeyG", 
          "Enc", "Dec", "Compute per batch", "SumMerge", "Wall time", "Raw time", "Err"]
 
-TP = np.loadtxt("tpali.dat", delimiter=" ", usecols=np.arange(1, COLS))
-TS = np.loadtxt("tseal.dat", delimiter=" ", usecols=np.arange(1, COLS))
-TH = np.loadtxt("theli_159.dat", delimiter=" ", usecols=np.arange(1, COLS))
+TP = np.loadtxt("tp.dat", delimiter=" ", usecols=np.arange(1, COLS))
+TS = np.loadtxt("ts.dat", delimiter=" ", usecols=np.arange(1, COLS))
+TH = np.loadtxt("th.dat", delimiter=" ", usecols=np.arange(1, COLS))
 #print(TP)
 #print(TS)
 

@@ -33,30 +33,32 @@ int main(int argc, char* argv[])
     int batchSize = 8192;
     int bits = 239;
     int nDepth = 2;
-    
+
     if (argc > 1) num_batch   = atoi(argv[1]);
     if (argc > 2) batchSize   = atoi(argv[2]);
     if (argc > 3) scaleFactor = atoi(argv[3]);
     if (argc > 4) bits        = atoi(argv[4]);
     if (argc > 5) nDepth      = atoi(argv[5]);
-    
+
+    //<-->m<----->bits<-->c
+    //<-->16384<->119<--->2
+    //<-->32768<->358<--->6
+    //<-->32768<->299<--->3
+    //<-->32768<->239<--->2
+    //<-->65536<->725<--->8
+    //<-->65536<->717<--->6
+    //<-->65536<->669<--->4
+    //<-->65536<->613<--->3
+    //<-->65536<->558<--->2
+
     int ncyclo = batchSize*4;
 
     srand(time(0));
 
-    // Get the num of cores.
-    int num_cores   = omp_get_max_threads();
-    int num_threads = omp_get_num_threads();
-
-    cout << "==== # of cores   : " << num_cores   << " ==== " << endl;
-    cout << "==== # of threads : " << num_threads << " ==== " << endl;
 
     TIC(t_global);
 
-    //omp_set_num_threads(num_threads);
-    omp_set_num_threads(num_cores);
-
-    cout << "Current OpenMP #threads : " << omp_get_num_threads() << " ==== " << endl;
+    cout << "# of Cores        : " << omp_get_max_threads() << endl;
 
     // initialize a Context object using the builder pattern
     Context context =
@@ -101,7 +103,7 @@ int main(int argc, char* argv[])
     std::vector<double> x(N);
 
 #pragma omp parallel for
-    for (int i=0; i<N; i++) x[i] = (double) (rand()-RAND_MAX/2) / (RAND_MAX);
+    for (int i=0; i<N; i++) x[i] = double(rand())/RAND_MAX - 0.5;
 
 
     cout << "# of data  : " << N << endl;
@@ -124,7 +126,7 @@ int main(int argc, char* argv[])
     unsigned int batch_sz = slot_count;
 
     TIC(t_tmp);
-    #pragma omp parallel for 
+#pragma omp parallel for 
     for (int i=0; i< num_batch; i++){
         vector<double> x_batch = {x.begin() + i*batch_sz, x.begin() + (i+1)*batch_sz};
         PtxtArray p0(context, x_batch);
@@ -137,13 +139,17 @@ int main(int argc, char* argv[])
 
     /// sum the whole slot with rotations.
     TIC(t_tmp);
+#if 0
     c0[0].multLowLvl(c0[0]);
-    //Ctxt_array[0].reLinearize();
+    //c0[0].reLinearize();
     for (int i=1; i < num_batch; i++){
         c0[i].multLowLvl(c0[i]);
-        //Ctxt_array[i].reLinearize();
         c0[0] += c0[i];
     }
+#else
+    for (int i=0; i < num_batch; i++)  c0[i].multLowLvl(c0[i]);
+    for (int i=1; i < num_batch; i++)  c0[0] += c0[i];
+#endif
     t_batch_sum = TOC(t_tmp);
 
     TIC(t_tmp);
@@ -189,7 +195,7 @@ int main(int argc, char* argv[])
         << t_pk.count() + t_sk.count() << " " << t_gk.count()<< " " << t_rk.count() << " "
         << t_enc.count()   << " " << t_dec.count() << " " << t_batch_sum.count()<< " " <<  t_reduct_sum.count() << " "
         << t_total.count() << " " << t_raw.count() << " " << error << " "
-        << num_batch       << " " << batchSize     << " " <<  scaleFactor << " " << bits << " " << rerr << endl;
+        << batchSize     << " " <<  scaleFactor << " " << bits << " " << rerr << endl;
 
     return 0;
 }

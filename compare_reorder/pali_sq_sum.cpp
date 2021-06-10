@@ -23,20 +23,14 @@ using namespace lbcrypto;
 
 int main(int argc, char* argv[]) {
 
-#if defined(HAVE_INT128)
-cout << "HAVE_INT128 defined" << endl;
-#endif
-cout << "NATIVEINT = " << NATIVEINT << endl;
-
-    srand(0);
-    usint num_batch = 10;
+    usint num_batch = 1;
     usint nMults   = 1;        // max depth of tower
     usint maxdepth = 2;        // max key for s^i : determines the capability of relinearization key.
-    usint scaleFactor = 49;    // 39
+    usint scaleFactor = 39;
     usint batchSize = 8192;
     int FIRSTBIT = 60;
     usint numLargeDigits = nMults + 1;
-    int relinwin = 0;
+    int relinwin = 10;
 
     if (argc > 1) num_batch   = atoi(argv[1]);
     if (argc > 2) nMults      = atoi(argv[2]);
@@ -46,6 +40,7 @@ cout << "NATIVEINT = " << NATIVEINT << endl;
     if (argc > 6) numLargeDigits = atoi(argv[6]);
     if (argc > 7) relinwin = atoi(argv[7]);
 
+    srand(time(0));
     int ringDimension = 16384;//2* batchSize;
 
     TIC(t_global);
@@ -127,8 +122,7 @@ cout << "NATIVEINT = " << NATIVEINT << endl;
     for (int i=0; i<num_batch; i++) {
         //vector<double> xbatch = {x.begin() + i*batchSize, (i==(num_batch-1))? x.end(): x.begin() + (i+1)*batchSize };
         vector<double> xbatch = {x.begin() + i*batchSize, x.begin() + (i+1)*batchSize };
-        auto ptx = cc->MakeCKKSPackedPlaintext(xbatch);
-        ctx[i] = cc->Encrypt(keyPair.publicKey, ptx);
+        ctx[i] = cc->Encrypt(keyPair.publicKey, cc->MakeCKKSPackedPlaintext(xbatch) );
     }
     DURATION tEncAll = TOC(t);
     cout << endl << endl;
@@ -150,7 +144,7 @@ cout << "NATIVEINT = " << NATIVEINT << endl;
     DURATION tEvalAll = TOC(t);
 
     TIC(t);
-    ctx2 = cc->Relinearize(ctx2);  // for EvalAutomorphism in EvalSum, I guess
+    ctx2 = cc->Relinearize(ctx2);  // for EvalSum
     //cc->RescaleInPlace(ctx2);
     auto ctsum = cc->EvalSum(ctx2, batchSize);
     DURATION tMerge = TOC(t);
@@ -158,6 +152,8 @@ cout << "NATIVEINT = " << NATIVEINT << endl;
     TIC(t);
     Plaintext res;
     cc->Decrypt(keyPair.secretKey, ctsum, &res);
+    res->SetLength(1);
+      
     DURATION tDec = TOC(t);
     
     double he_result = res -> GetCKKSPackedValue()[0].real();
@@ -182,7 +178,9 @@ cout << "NATIVEINT = " << NATIVEINT << endl;
     printf( "CKKS Result : %.6f\n", he_result);
     printf( "Raw  Result : %.6f\n", raw_result);
     printf( "Rel Error (%) : %.3g\n", rerr*100);
-        
+    cout << res << endl;    // GetPlaintextModulus() - m_logError;
+    
+
     cout << "======== Time in secs ========" << endl;
     cout << "Public Key        : " << t_pk.count() <<endl;
     cout << "Secret Key Gen    : " << t_sk.count() <<endl;
@@ -200,7 +198,7 @@ cout << "NATIVEINT = " << NATIVEINT << endl;
                          << t_pk.count() << " "  <<  t_gk.count()<< " " << t_rk.count() << " "
                          << t_enc.count() << " " << t_dec.count()<< " " << t_batch_sum.count()<< " " <<  t_reduct_sum.count() << " " 
                          << t_total.count() << " " << t_raw.count() << " " << error << " "
-                      << num_batch << " " <<  batchSize << " "<<  scaleFactor << " " << FIRSTBIT << " " << rerr << endl;
+                         << batchSize << " "<<  scaleFactor << " " << FIRSTBIT << " " << rerr << endl;
 
     return 0;
 }

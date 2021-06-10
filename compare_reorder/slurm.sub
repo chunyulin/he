@@ -1,6 +1,6 @@
 #! /bin/bash
 #SBATCH -J compare
-#SBATCH -o compare.log
+#SBATCH -o compare3.log
 #SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=1
 
 module purge
@@ -12,8 +12,9 @@ export OMP_NUM_THREADS=1
 
 NBATCH="1 2 4 8 16 32 64 128 192 256 512 1024"
 for n in ${NBATCH}; do
-  srun --cpu-bind=v,ldoms ./pali_sq_sum  ${n} 1 8192 39 60 2 10
-  srun --cpu-bind=v,ldoms ./helib_sq_sum ${n} 8192 39 159 2
-  srun --cpu-bind=v,ldoms ./seal_sq_sum ${n} 8192 39
+   #srun --cpu-bind=v,ldoms ./pali_sq_sum  ${n} 2 8192 39 60 3
+  srun --cpu-bind=v,ldoms ./pali_sq_sum  ${n} 1 8192 39 60 2 10 1
+  srun --cpu-bind=v,ldoms ./helib_sq_sum ${n} 8192 39 239 2
+  srun --cpu-bind=v,ldoms ./seal_sq_sum  ${n} 8192 39 60
 done
 

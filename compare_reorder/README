@@ -1,0 +1,2 @@
+Run:  sbatch slurm.sub
+Plot: bash plt_timing

@@ -28,30 +28,21 @@ using namespace seal;
 int main(int argc, char* argv[])
 {
     srand(time(0));
+    cout << "# of Cores        : " << omp_get_max_threads() << endl;
     
-    // Get the num of cores.
-    int num_cores   = omp_get_max_threads();
-    int num_threads = omp_get_num_threads();
-
-    cout << "==== # of cores   : " << num_cores   << " ==== " << endl;
-    cout << "==== # of threads : " << num_threads << " ==== " << endl;
-
-    int num_batch = 10;
+    int num_batch = 1;
     int batchSize = 8192;
     int sf = 39;
+    int FIRSTBIT = 60;
 
     if (argc > 1) num_batch = atoi(argv[1]);
     if (argc > 2) batchSize = atoi(argv[2]);
     if (argc > 3) sf        = atoi(argv[3]);
+    if (argc > 4) FIRSTBIT  = atoi(argv[4]);
 
     double scale = pow(2.0, sf);
 
-
-
     TIC(t_global);
-
-    //omp_set_num_threads(num_threads);
-    omp_set_num_threads(num_cores);
 
     // Encryption parameters.
     EncryptionParameters parms(scheme_type::ckks);
@@ -60,19 +51,16 @@ int main(int argc, char* argv[])
     size_t poly_modulus_degree = 8192*2;
     parms.set_poly_modulus_degree(poly_modulus_degree);
 
-    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 60, 39, 39, 60 }));
+    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { FIRSTBIT, sf, sf, FIRSTBIT }));
     //auto p128 = seal::util::global_variables::GetDefaultCoeffModulus128();
     //parms.set_coeff_modulus( p128[16384] );
 
-    // Print the context.
     SEALContext context(parms);
     //print_parameters(context);
-    cout << endl;
+    //cout << endl;
 
     cout << " ==== Elapsed time for creating SEALContext ==== " << endl;
     cout << "=================================================" << endl;
-
-    // Here we start key generation.
 
     // Prepare keys.
     KeyGenerator keygen(context);
@@ -115,8 +103,8 @@ int main(int argc, char* argv[])
     int N = batchSize*num_batch;
     std::vector<double> x(N);
 #pragma omp parallel for
-    for (int i=0; i<N; i++) x[i] = double(1.0);
-    //for (int i=0; i<N; i++) x[i] = (double) (rand()-RAND_MAX/2) / (RAND_MAX);
+   for (int i=0; i<N; i++) x[i] = double(rand())/RAND_MAX - 0.5;
+    //for (int i=0; i<N; i++) x[i] = double(1.0);
 
     // Encode & Encrypt.
     vector<Ciphertext> cipher_txts(num_batch);
@@ -132,7 +120,7 @@ int main(int argc, char* argv[])
     vector<double> result_vec(slot_count);
 
     /// calculate the raw result.
-//#pragma omp parallel for reduction(+ : raw_result)
+    #pragma omp parallel for reduction(+ : raw_result)
     for(int i=0; i < x.size(); i++){
         raw_result += x[i]*x[i];
     }
@@ -143,7 +131,7 @@ int main(int argc, char* argv[])
     Ciphertext x_encrypted;
 
     TIC(t_tmp);
-#pragma omp parallel for 
+    #pragma omp parallel for 
     for (int i=0; i< num_batch; i++){
 
         Plaintext  x_plain;
@@ -157,25 +145,23 @@ int main(int argc, char* argv[])
     }
 
     t_enc = TOC(t_tmp);
-    //     cout << "Encode/Encrypt : " << t_enc.count() << endl;
     cout << "End of encode/encrypt..." << endl;
 
-    /// do the HE computations.
-    /// calculate the square.
     cout << "Compute x^2 and relinearize..." << endl;
-
 
     /// sum the whole slot with rotations.
     int num_rotation = log2(slot_count);
 
     TIC(t_tmp);
     evaluator.square_inplace(cipher_txts[0]);
+    
     //evaluator.relinearize_inplace(cipher_txts[0], relin_keys);
     //evaluator.rescale_to_next_inplace(cipher_txts[0]);
 
     for (int i=1; i < num_batch; i++){
 
         evaluator.square_inplace(cipher_txts[i]);
+        
         //evaluator.relinearize_inplace(cipher_txts[i], relin_keys);
         //evaluator.rescale_to_next_inplace(cipher_txts[i]);
 
@@ -209,10 +195,12 @@ int main(int argc, char* argv[])
     t_total = TOC(t_global);
 
     //cout << "Decrypted   : " << t_dec.count() << endl;
+    double error = he_result - raw_result;
+    double rerr  = (he_result - raw_result)/raw_result;
     printf( "CKKS Result : %.6f\n", he_result);
     printf( "Raw  Result : %.6f\n", raw_result);
-    auto  error = he_result - raw_result;
-    cout << "Error: " << std::setprecision(16) << error << endl;
+    printf( "Rel Error (%) : %.3g\n\n", rerr*100);
+
 
     cout << "======== Time in secs ========" << endl;
     cout << "Public Key        : " << t_pk.count() <<endl;
@@ -231,7 +219,8 @@ int main(int argc, char* argv[])
     cout << "[SEAL_Summary] " << num_batch  << " "
                          << t_pk.count() + t_sk.count() << " " << t_gk.count()<< " " << t_rk.count() << " "
                          << t_enc.count()   << " " << t_dec.count()<< " " << t_batch_sum.count()<< " " <<  t_reduct_sum.count() << " "
-                         << t_total.count() <<  " " << t_raw.count() << " " << error  << endl;
+                         << t_total.count() <<  " " << t_raw.count() << " " << error  << " "
+                         << batchSize << " "<<  sf << " " << FIRSTBIT << " " << rerr << endl;
     return 0;
 }
 

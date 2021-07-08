@@ -1,35 +1,40 @@
 export OMP_NUM_THREADS=1
 
 module purge
-module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0
+module load cmake gcc9/9.3.1
+
+SEAL=/opt/ohpc/pkg/kagra/he/seal-3.6.6
+PALISADE=/opt/ohpc/pkg/kagra/he/palisade-1.11.3
+HELIB=/opt/ohpc/pkg/kagra/he/helib-2.1.0
 
 
 seal() {
-SEAL=/pkg/gcc9/seal
-TARGET="seal_sq_sum"
-g++ ${TARGET}.cpp -O3  -std=c++17 -o ${TARGET} -fopenmp  \
-    -L${SEAL}/lib64 -lseal -Wl,-rpath=${SEAL}/lib64 \
-    -I${SEAL}/include/SEAL-3.6
+  TARGET="seal_sq_sum"
+  g++ ${TARGET}.cpp -O3  -std=c++17 -o ${TARGET} -fopenmp  \
+      -L${SEAL}/lib64 -lseal-3.6 \
+      -I${SEAL}/include/SEAL-3.6 \
+      -Wl,-rpath=${SEAL}/lib64
 }
 
 
-pali() {
-TARGET="pali"
-PALISADE=/pkg/he/palisade-1.11.1
-g++  ${TARGET}.cpp -O3 -std=c++17  -o ${TARGET} -fopenmp  \
-   -L${PALISADE}/lib -lPALISADEpke -lPALISADEcore  -Wl,-rpath=${PALISADE}/lib \
-   -I${PALISADE}/include -I${PALISADE}/include/palisade \
-   -I${PALISADE}/include/palisade/pke -I${PALISADE}/include/palisade/core  \
-   -I${PALISADE}/include/palisade/third-party/include
+palisade() {
+  TARGET="pali_sq_sum"
+  g++  ${TARGET}.cpp -O3 -std=c++17  -o ${TARGET} -fopenmp  \
+     -L${PALISADE}/lib -lPALISADEpke -lPALISADEcore \
+     -I${PALISADE}/include -I${PALISADE}/include/palisade \
+     -I${PALISADE}/include/palisade/pke -I${PALISADE}/include/palisade/core  \
+     -I${PALISADE}/include/palisade/third-party/include \
+     -Wl,-rpath=${PALISADE}/lib
 }
 
-he() {
-TARGET="helib_sq_sum"
-HELIB=/pkg/he/helib-2.1.0
-g++  ${TARGET}.cpp -O3 -std=c++17  -o ${TARGET} -fopenmp \
-   -L${HELIB}/lib -L${HELIB}/lib64 -lhelib -lntl -Wl,-rpath,${HELIB}/lib,-rpath,${HELIB}/lib64 \
-   -I${HELIB}/include
+helib() {
+  TARGET="helib_sq_sum"
+  g++  ${TARGET}.cpp -O3 -std=c++17  -o ${TARGET} -fopenmp \
+     -L${HELIB}/lib -L${HELIB}/lib64 -lhelib -lntl \
+     -I${HELIB}/include \
+     -Wl,-rpath,${HELIB}/lib,-rpath,${HELIB}/lib64
 }
 
-#palisade
-#seal
+helib
+palisade
+seal

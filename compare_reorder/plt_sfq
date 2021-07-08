@@ -1,5 +1,0 @@
-source /pkg/ENV/pycbc_py2/init
-
-#grep "\[SEAL_Summary\]"     compare.log > tseal.dat
-
-python plt_sfq.py

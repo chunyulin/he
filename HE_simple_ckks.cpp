@@ -34,36 +34,34 @@ int main(int argc, char* argv[]) {
     usint plaintextModulus = 536903681;
     double sigma = 3.2;
 
-    usint nMults = 4;
-    usint numLargeDigits = nMults+1;
-
+    usint nMults = 1;
     usint maxdepth = 2;  // max key for s^2
-    usint scaleFactor = 39; // will also effect ring dimention
+
     usint firstModSize = 60;
     usint relinWindow = 10;   /* 0 means using CRT */
-    int ringDimension = batchSize*2;   // default 8192 for std_128, but also depend on sf
     usint dcrtBits = 60;
+    //usint plaintextModulus = 32768*32+1;
+    usint scaleFactor = 39; // will also effect ring dimention
+
+    usint numLargeDigits = nMults + 1;
+    int ringDimension = batchSize*2;   // default 8192 for std_128, but also depend on sf
 
     if (argc >= 3) {
         batchSize = atoi(argv[1]);
         N         = int(batchSize * atof(argv[2]));
     }
-    if (argc >= 4)  {
-       nMults         = atoi(argv[3]);
-       numLargeDigits = nMults+1;
+    if (argc >= 4) {
+        scaleFactor = atoi(argv[3]);
     }
-    if (argc >= 5)  maxdepth       = atoi(argv[4]);
-    if (argc >= 6)  scaleFactor = atoi(argv[5]);
-    if (argc >= 7)  firstModSize = atoi(argv[6]);
-    if (argc >= 8)  numLargeDigits = atoi(argv[7]);
-    
-    /*if (argc == 6) {
+    if (argc >= 5) {
+        firstModSize = atoi(argv[4]);
+    }
+    if (argc == 6) {
 	if (atoi(argv[5]) == 192)  securityLevel = HEStd_192_classic;
 	if (atoi(argv[5]) == 256)  securityLevel = HEStd_256_classic;
-    }*/
+    }
 
 
-//#define BGV
 #if defined(BFV)
     CryptoContext<DCRTPoly> cc = CryptoContextFactory<DCRTPoly>::genCryptoContextBFVrns(
             plaintextModulus, securityLevel, sigma, 0, nMults, 0, OPTIMIZED, maxdepth,
@@ -79,10 +77,10 @@ int main(int argc, char* argv[]) {
     //    , ringDimension, EXACTRESCALE, HYBRID, numLargeDigits, maxdepth, 60, 5, OPTIMIZED);
     auto cc = CryptoContextFactory<DCRTPoly>::genCryptoContextCKKS(
             nMults, scaleFactor, batchSize, securityLevel, ringDimension,
-            //APPROXRESCALE, BV,
-            //APPROXAUTO, BV,
+            APPROXRESCALE, BV,
             //EXACTRESCALE, HYBRID,
-            APPROXAUTO, BV, //  eval/batch<0.1s
+            //APPROXRESCALE, BV,
+            //APPROXRESCALE EXACTRESCALE,, BV(Rd=8192),
             numLargeDigits, maxdepth, firstModSize, relinWindow, OPTIMIZED);
                                                     
 #endif
@@ -100,9 +98,6 @@ int main(int argc, char* argv[]) {
     std::cout << "cyclo order    : " << cc->GetCyclotomicOrder() << std::endl;
     std::cout << "GetRootOfUnity : " << cc->GetRootOfUnity() << std::endl;
     std::cout << "p, log2 q = " << ccParam->GetPlaintextModulus() << " " << log2(cc->GetModulus().ConvertToDouble())  << std::endl;
-    std::cout << "Maxdepth  = " << ccParam->GetMaxDepth()  << std::endl;
-    std::cout << "RelinWin  = " << ccParam->GetRelinWindow()  << std::endl;
-
 
     int rlen = N/batchSize + int(N%batchSize!=0);
     cout << "len(x) / batchSize / # batch : " << N << " // " << batchSize << " = " << rlen << endl;
@@ -120,9 +115,22 @@ int main(int argc, char* argv[]) {
     DURATION tMultKG = TOC(t1);
 
     TIC(t1);
+/*
+#if defined(FASTROTATION)
+    int nr = log2(batchSize);
+    vector<int> ilist(nr);
+    for (int i=0;i<nr;i++)   ilist[i] = 1<<i;
+    cc->EvalAtIndexKeyGen(keyPair.secretKey, ilist);
+#else
+    vector<int> ilist(rlen-1);
+    #pragma omp parallel for
+    for (int i=0;i<rlen-1;i++) ilist[i]=-(i+1);
+    cc->EvalAtIndexKeyGen(keyPair.secretKey, ilist);
+#endif
+*/
     DURATION tRotKG = TOC(t1);
 
-    cout << "Generating DP random vector with Sigmoid= ";
+    cout << "Generating DP random vector with Sum(x^2)= ";
 #if defined(BFV) || defined(BGV)
     std::vector<long> x(N);
     #pragma omp parallel for
@@ -141,8 +149,7 @@ int main(int argc, char* argv[]) {
       exact_sum = 0;
       #pragma omp parallel for reduction(+ : exact_sum)
       for (int i=0; i<N; i++) {
-          //exact_sum += 0.5 + 0.25*x[i]*( 1.0 - 0.083333333333333*x[i]*x[i]);  //slower
-          exact_sum += 0.5 + 0.25*x[i] - 0.0208333333333333*x[i]*x[i]*x[i];
+          exact_sum += x[i]*x[i];
       }
     }
     DURATION tDP = TOC(t) / 10;
@@ -173,73 +180,39 @@ int main(int argc, char* argv[]) {
     DURATION tEncAll = TOC(t);
     cout <<endl;
 
-    cout<< "Addition over batches";
+    cout<< "Compute sum per batch ";
     TIC(t);
-
-#if 1
-    Ciphertext<DCRTPoly> ctx2;
-    {
-                                                                              cout << ctx[0]->GetLevel() << ctx[0]->GetDepth() << endl;//01
-    auto xo48    = cc->EvalMult(-0.0208333333333333, ctx[0]);  cout << xo48->GetLevel() << xo48->GetDepth() << endl;    //02
-    auto x2      = cc->EvalMult(ctx[0], ctx[0]);               cout << x2->GetLevel() << x2->GetDepth() << endl; //02
-    auto x3      = cc->EvalMultNoRelin(xo48, x2);      cout << x3->GetLevel() << x3->GetDepth() << endl; //04
-    auto xo4     = cc->EvalMult(ctx[0], 0.25);                 cout << xo4->GetLevel() << xo4->GetDepth() << endl;      //02
-    //auto tmp = cc->EvalAdd(xo4, x3);
-    cc->EvalAddInPlace(xo4, x3);
-    ctx2     = cc->EvalAdd(0.5, xo4);                           cout << ctx2->GetLevel() << ctx2->GetDepth() << endl;   //12
-    }
-    
+    #if 1
+    Ciphertext<DCRTPoly>  ctx2 = cc->EvalMultNoRelin(ctx[0], ctx[0]);
+    //cc->RescaleInPlace(ctx2);
     for (int i = 1; i < rlen; i++) {
-        cout << ".";
-    
-       auto xo48    = cc->EvalMult(-0.0208333333333333, ctx[i]);
-       auto x2      = cc->EvalMult(ctx[i], ctx[i]);
-       auto x3      = cc->EvalMultNoRelin(xo48, x2);
-       auto xo4     = cc->EvalMult(ctx[i], 0.25);
-       //auto tmp = cc->EvalAdd(xo4, x3);
-       cc->EvalAddInPlace(xo4, x3);
-       auto tmp_ctx2 = cc->EvalAdd(0.5, xo4);
-       cc->EvalAddInPlace(ctx2, tmp_ctx2);
-    }
-#else
-    // TODO 
-    cout<< "BinaryTree Add..";
-    TIC(t);
-
-    for (int i = 0; i < rlen; i++) {
-        cout << ".";
-    
-        auto xo48    = cc->EvalMult(-0.0208333333333333, ctx[i]);
-        auto x2      = cc->EvalMult(ctx[i], ctx[i]);
-        auto x3      = cc->EvalMultNoRelin(xo48, x2);
-        auto xo4     = cc->EvalMult(ctx[i], 0.25);
-        //auto tmp = cc->EvalAdd(xo4, x3);
-        cc->EvalAddInPlace(xo4, x3);
-        auto tmp_ctx2 = cc->EvalAdd(0.5, xo4);
+        Ciphertext<DCRTPoly> tmp_ctx2 = cc->EvalMultNoRelin(ctx[i], ctx[i]);
         cc->EvalAddInPlace(ctx2, tmp_ctx2);
-   }
-
-
-    for(int j = 1; j < rlen; j=j*2)
-    for(int i = 0; i < rlen; i = i + 2*j) {
-       if ( (i+j)< rlen )
-       
-       vector[i] = cc->EvalAdd(vector[i],vector[i+j]);
     }
-#endif
+    #else
+    // Use reduction trick...
 
+    #endif
     DURATION tEvalAll = TOC(t);
-    cout <<endl;
 
-    cout << "Merge partial sum." << endl;
+    cout << "Merging partial sum." << endl;
     TIC(t);
     ctx2 = cc->Relinearize(ctx2);  // for EvalSum
     //cc->RescaleInPlace(ctx2);
     auto ctsum = cc->EvalSum(ctx2, batchSize);
     DURATION tMerge = TOC(t);
+    
+
+#if 0
+    Plaintext res11;
+    for (int i=0; i<rlen; i++) {
+        cc->Decrypt(keyPair.secretKey, bctsum[i], &res11);
+        cout <<  res11->GetPackedValue()[0] << " ";
+    }
+#endif
 
 
-    cout << "Decrypting result: Sigmoid= ";
+    cout << "Decrypting result: Sum(x^2)= ";
     TIC(t);
     Plaintext res;
     cc->Decrypt(keyPair.secretKey, ctsum, &res);
@@ -265,10 +238,9 @@ int main(int argc, char* argv[]) {
     std::cout << "Merge     per batch: " << tMerge.count()/rlen <<endl;
     std::cout << "Dec time           : " << tDec.count() <<endl;
     printf("W/O HE             : %.4f     HE: %.2f KF  CPU: %.2f MF (%.1fx)  ) \n", tDP.count(),
-              exact_flop / (tEvalAll+tMerge).count() / ncore * 1e-3,
-              exact_flop / tDP.count() / ncore * 1e-6,
-              (tEvalAll+tMerge).count()/tDP.count() );
-
+                      exact_flop / (tEvalAll+tMerge).count() / ncore * 1e-3,
+                      exact_flop / tDP.count() / ncore * 1e-6,
+                      (tEvalAll+tMerge).count()/tDP.count() );
 
     std::cout << "[TimeSummary] " << omp_get_max_threads() << " " 
         << cc->GetRingDimension() << " "

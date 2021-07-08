@@ -1,7 +1,10 @@
-source /pkg/ENV/pycbc_py2/init
+module purge
+module load miniconda3
+conda activate /opt/ohpc/pkg/kagra/ENV/py37
 
-grep "\[PALISADE_Summary\]" compare3.log > tp.dat
-grep "\[SEAL_Summary\]"     compare3.log > ts.dat
-grep "\[HElib_Summary\]"    compare3.log > th.dat
 
-python plt_timing.py 
+grep "\[PALISADE_Summary\]" compare.log > tp.dat
+grep "\[SEAL_Summary\]"     compare.log > ts.dat
+grep "\[HElib_Summary\]"    compare.log > th.dat
+
+python3 plt_timing.py 

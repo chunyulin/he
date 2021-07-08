@@ -23,6 +23,8 @@ using namespace lbcrypto;
 
 int main(int argc, char* argv[]) {
 
+    int ncore = omp_get_max_threads();
+ 
     usint num_batch = 1;
     usint nMults   = 1;        // max depth of tower
     usint maxdepth = 2;        // max key for s^i : determines the capability of relinearization key.
@@ -60,7 +62,7 @@ int main(int argc, char* argv[]) {
 
     // Output the generated parameters
     auto ccParam = cc->GetCryptoParameters();
-    cout << "# of Cores        : " << omp_get_max_threads() << endl;
+    cout << "# of Cores        : " << ncore << endl;
     cout << "   Ring dimension : " << cc->GetRingDimension() << endl;
     cout << "   log2q : " << log2( cc-> GetModulus().ConvertToDouble()) << endl ; //; + FIRSTBIT << endl;
     cout << "  log2 q : " << ccParam->GetElementParams()->GetModulus().GetMSB() << endl;
@@ -199,6 +201,9 @@ int main(int argc, char* argv[]) {
                          << t_enc.count() << " " << t_dec.count()<< " " << t_batch_sum.count()<< " " <<  t_reduct_sum.count() << " " 
                          << t_total.count() << " " << t_raw.count() << " " << error << " "
                          << batchSize << " "<<  scaleFactor << " " << FIRSTBIT << " " << rerr << endl;
-
+    usint  exact_flop = 2*N;
+    printf("doubel MFlops/core: %.4f\n", exact_flop/t_raw.count()/ncore*1e-6 );
+    printf("HE     KFlops/core: %.4f\n", exact_flop/(t_batch_sum.count()+t_reduct_sum.count())/ncore*1e-3   );
+               
     return 0;
 }

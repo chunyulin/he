@@ -1,2 +1,8 @@
-Run:  sbatch slurm.sub
-Plot: bash plt_timing
+## Compile:
+$ . ./gocom
+
+## Sumbit comparison test:
+$ sbatch slurm.sub
+
+## Plot:
+$ . ./plt_timing

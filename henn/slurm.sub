@@ -1,0 +1,11 @@
+#! /bin/bash
+#SBATCH -J henn
+#SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=4
+module purge
+module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0
+export OMP_NUM_THREADS=4
+
+./henn
+
+
+echo "--- Walltime: ${SECONDS} sec."

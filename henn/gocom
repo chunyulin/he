@@ -1,10 +1,10 @@
-export OMP_NUM_THREADS=8
+export OMP_NUM_THREADS=32
 
 module purge
 module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0
 
 
-#PALISADE=/pkg/he/palisade-1.11.3
+#PALISADE=/pkg/he/palisade-1.11.3fix
 #TARGET="idash_test"
 #
 #for t in ${TARGET}; do

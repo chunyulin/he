@@ -1,7 +1,5 @@
 #pragma once
 typedef float real;
-const char* H5NAME = "CNNc1.final.h5";
-
 
 #include <iostream>
 #include <string>
@@ -60,7 +58,7 @@ class Layer {
     int  getOutDim(int in_, int s_=1, int p_=2) {
         s = s_; p = p_;
         setInDim(in_);
-        out_dim = ( (in_-wd[0])/s_+1 ) / 2;
+        out_dim = ( (in_-wd[0])/s + 1 ) / p;   // we assume conv+act+pool layer
         return out_dim;
     }
 };

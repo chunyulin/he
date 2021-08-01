@@ -8,21 +8,30 @@ INCLUDE=-I${PALISADE}/include -I${PALISADE}/include/palisade \
         -I${PALISADE}/include/palisade/third-party/include
 LIBS=-L/usr/lib64 -lhdf5 -lhdf5_cpp \
      -L${PALISADE}/lib -Wl,-rpath=${PALISADE}/lib -lPALISADEpke -lPALISADEcore
-OBJS=henn.o
 
-all: henn
 
-${OBJS}: layer.h utils.h ccTest.h
+OBJS=preprocess.o heinfer.o main.o
 
-henn: ${OBJS}
-	$(CXX) $(OPT) $? -o $@ $(LIBS)
 
-gothru: gothru.o
-	$(CXX) $(OPT) $? -o $@ $(LIBS)
-
+all :main
+main: $(OBJS)
+	$(CXX) $(OPT) $(OBJS) -o $@ $(LIBS)
 
 .cpp.o:
 	$(CXX) $(OPT) $(INCLUDE) $< -c -o $@ $(DEBUG)
 clean:
-	rm *.o -f ${TARGET}
+	rm -f  *.o main
+
+
+preprocess.o: heinfer.h 
+
+heinfer.o: heinfer.h
+
+main.o: utils.h heinfer.h
+
+
+##################################
+gothru: gothru.o
+	$(CXX) $(OPT) $? -o $@ $(LIBS)
+
 

@@ -1,17 +1,14 @@
-#pragma once
-typedef float real;
-
 #include <iostream>
 #include <string>
 #include <vector>
-using std::vector;
-using std::string;
-using std::endl;
-using std::cout;
+using namespace std;
 
+#include <cstdio>
 #include <H5Cpp.h>
 using namespace H5;
 
+typedef float real;
+const char* H5NAME = "CNN_letter.weights.final.h5";
 
 void readH5Var(const H5File& h5, string var, vector<hsize_t> & dim, vector<real> & data) {
     
@@ -35,31 +32,28 @@ void readH5Var(const H5File& h5, string var, vector<hsize_t> & dim, vector<real>
 class Layer {
     public:
     string h5wvar, h5bvar;
-    int in_dim, out_dim;
-    int s, p;
     vector<hsize_t> wd, bd;
     vector<float> w, b;
 
     Layer(const H5File& h5, string h5wvar_, string h5bvar_) : h5bvar (h5bvar_), h5wvar (h5wvar_){
-        readH5Var(h5, h5wvar, wd, w);
+        readH5Var(h5, h5wvar, wd, w); 
         readH5Var(h5, h5bvar, bd, b);
-        info();
-    }
-    void info() {
-       cout << "  Read dims..  W: ";
-       for(const auto& i:wd) cout << i << " "; 
-       cout << "    B: ";
-       for(const auto& i:bd) cout << i << " ";
-       cout << endl;
-    }
-    void setInDim(int in_) {  in_dim = in_;   }
-    int  getInDim()        {  return in_dim;   }
-    int  getOutDim()       {  return out_dim;   }
-    int  getOutDim(int in_, int s_=1, int p_=2) {
-        s = s_; p = p_;
-        setInDim(in_);
-        out_dim = ( (in_-wd[0])/s + 1 ) / p;   // we assume conv+act+pool layer
-        return out_dim;
     }
 };
+
+int main (void)
+{
+    H5File h5d(H5NAME, H5F_ACC_RDONLY);
+    Layer conv1 (h5d, "/conv1/conv1/kernel:0", "/conv1/conv1/bias:0");
+    Layer conv2 (h5d, "/conv2/conv2/kernel:0", "/conv2/conv2/bias:0");
+    Layer conv3 (h5d, "/conv3/conv3/kernel:0", "/conv3/conv3/bias:0");
+    Layer output(h5d, "/output/output/kernel:0", "/output/output/bias:0");
+
+    for (int i=0; i<160; i++) {
+        cout << conv1.w[i] << " ";
+    }
+
+
+}
+
 

@@ -1,17 +1,17 @@
 #! /bin/bash
-#SBATCH -J heinfer
-#SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=8
-#SBATCH --nodelist=ib04
+#SBATCH -J heinfer_vertical
+#SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=16
+###SBATCH --nodelist=ib04
 module purge
 module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0
-export OMP_NUM_THREADS=8
+export OMP_NUM_THREADS=16
 
-N="3200 6400 12800"
-B="2048 4096 8192 16384"
+NBP="512 1024 2048 4096"
+PINF="2048 4096 8192 16384"
 
-for n in ${N}; do
-for b in ${B}; do
- ./main CNN_fs8.h5 ${n} ${b}
+for n in ${NBP}; do
+for p in ${PINF}; do
+ ./main CNN_fs8.h5 ${n} ${p}
 done
 done
 

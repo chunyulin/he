@@ -1,4 +1,5 @@
-export OMP_NUM_THREADS=32
+export OMP_NUM_THREADS=4
+
 
 module purge
 module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0

@@ -1,0 +1,8 @@
+source /pkg/ENV/pycbc_py2/init
+
+
+#grep "Summary" data.log | awk '{print $3,$5,$7,$9,$11,$13,$15,$16,$17,$18}'  > data_new.csv
+#grep  "Total evaltion time " data.log  | awk '{print $6}' >  data.time
+#paste data0.csv data.time > data.csv
+
+python plt.py

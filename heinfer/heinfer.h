@@ -1,6 +1,6 @@
 #pragma once
 
-#define  SANITY_CHECK
+//#define  SANITY_CHECK
 
 #include <omp.h>
 #include <iostream>
@@ -72,7 +72,7 @@ class HEInfer {
     void DenseSigmoid(CVec& out, const CVec& in, Layer& l);
     void DenseSigmoid_packed(CVec& out, const CVec& in, Layer& l);
 
-    void EncodeEncrypt(CVec& cvec, const vector<vector<double>>);
+    void EncodeEncrypt(CVec& cvec, const vector<vector<double>>&);
     vector<vector<double>> Decrypt(const CVec&);
     //void readModelParams();
     //void buildLayers();
@@ -86,8 +86,8 @@ class HEInfer {
         Plaintext ptx;
         cc->Decrypt(keyPair.secretKey, ctx, &ptx);
         auto v = ptx->GetRealPackedValue();
-        cout << "  [Test] LDC: " << ctx->GetLevel() << " " << ctx->GetDepth() << " " <<  ctx->GetElements().size()
-             << "  Err/Pre: " << ptx->GetLogError() << "/" << ptx->GetLogPrecision() << "    ";
+        cout << "   [Test] LDC: " << ctx->GetLevel() << " " << ctx->GetDepth() << " " <<  ctx->GetElements().size()
+             << "   Err/Pre: " << ptx->GetLogError() << "/" << ptx->GetLogPrecision() << "    ";
         for (int p=0;p<PF;p++) cout << v[p*pinf] << " "; 
         cout  << endl;
         //ptx->SetLength(l); // caution: this will remove the rest.
@@ -129,9 +129,9 @@ class Layer {
         info();
     }
     void info() {
-       cout << "  Read dims ...  W: ";
+       cout << "   Read parameters ...  Width/Ch/Filters: ";
        for(const auto& i:wd) cout << i << " "; 
-       cout << "\t B: ";
+       cout << "\t Bias: ";
        for(const auto& i:bd) cout << i << " ";
        cout << endl;
     }

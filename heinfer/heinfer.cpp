@@ -56,10 +56,10 @@ void ccInfo(CryptoContext<DCRTPoly>& cc) {
 HEInfer::HEInfer(int ninf_, int nbp_, int nMults_, int depth_, int sf_, int fmod_, int ringDim_, int pinf_ = 0) : 
     ninf(ninf_), nbp(nbp_), nMults(nMults_), maxdepth(depth_), scaleFactor(sf_), firstModSize(fmod_), ringDim(ringDim_) {
 
-    printf("======= HEInfer =======\n");
-    printf("  NBP  : %d\n", nbp);
-    printf("  NINF : %d\n", ninf);
-    printf("  nMults=%d, MaxDepth=%d, ScaleFactor=%d, DecryptBits=%d\n", nMults, maxdepth, scaleFactor, firstModSize);
+    printf("Initialized Palisade Cryptocontext...\n");
+    printf("   NBP  : %d\n", nbp);
+    printf("   NINF : %d\n", ninf);
+    printf("   nMults=%d, MaxDepth=%d, ScaleFactor=%d, DecryptBits=%d\n", nMults, maxdepth, scaleFactor, firstModSize);
 
     cc = CryptoContextFactory<DCRTPoly>::genCryptoContextCKKS(
             nMults, scaleFactor, 0 /*batch*/, securityLevel, ringDim,
@@ -80,8 +80,8 @@ HEInfer::HEInfer(int ninf_, int nbp_, int nMults_, int depth_, int sf_, int fmod
     PF = (ringDim/pinf)>>1;
     
     int nbatch = 1;
-    printf("  RingDim  = %d\n", ringDim);
-    printf("  Infer packing = %d   Packing factor = %d   (Slot util.: %.1f%)\n\n", pinf, PF, float(ninf)/pinf*100);
+    printf("   RingDim  = %d\n", ringDim);
+    printf("   Infer packing = %d   Packing factor = %d   (Slot util.: %.1f%)\n\n", pinf, PF, float(ninf)/pinf*100);
 
     //ccInfo(cc);
 }
@@ -191,8 +191,8 @@ void HEInfer::ConvReluAP1d(CVec& out, const CVec& in, Layer& l, const int S=1, c
 
             vector<double> w( getSlots(), 0.0);
 
-            // TODO:  Can this part go parallel ?
-            for (int k=0; k<K; k++)
+            
+            for (int k=0; k<K; k++)   // TODO:  Can this part go parallel ?
             for (int c=0; c<C; c++) {
                 int kl = ((i*P+p)*S+k)*C+c;
                 int kc = kl/PF;        // which ciphertext
@@ -200,11 +200,11 @@ void HEInfer::ConvReluAP1d(CVec& out, const CVec& in, Layer& l, const int S=1, c
 
 //cout<<  l.w[(k*C+c)*F+f] << "==========="<< i<< " " << f << " "<< p << " " << kc << " " << kp << endl;
 
-                auto iter = w.begin()+kp*pinf;
+                auto iter = w.begin() + kp*pinf;
                 std::fill (iter, iter+ninf, l.w[(k*C+c)*F+f]);
 
-                // once complete a full package, comp W*X ciphertext and save partially to convSum
-                if ( kp == PF-1 || (k*C+c==C*K-1) ) {
+                // once complete a full package, comp W*X ciphertext and save to convSum
+                if ( kp == PF-1 || (k*C+c == C*K-1) ) {
                     Plaintext wenc = cc->MakeCKKSPackedPlaintext(w, 1);
                     if (x[p] == nullptr) x[p] = cc->EvalMult(in[kc], wenc);
                     else                 cc->EvalAddInPlace(x[p], cc->EvalMult(in[kc], wenc));
@@ -217,16 +217,18 @@ void HEInfer::ConvReluAP1d(CVec& out, const CVec& in, Layer& l, const int S=1, c
             for(int j = pinf; j < getSlots(); j*=2)  {
                 cc->EvalAddInPlace(x[p], cc->EvalAtIndex(x[p], j));
             }
-//cout <<"========="; testDecrypt(x[0]);
 
+            cc->ModReduceInPlace( x[p] );
+
+//cout <<"========="; testDecrypt(x[0]);
+            // Average pool of ReLU [x^2]
+            x[p] = cc->EvalMultNoRelin(x[p], x[p]);
         }  // end of p
 
-        // Average pool of ReLU [x^2]
-        x[0] = cc->EvalMultNoRelin(x[0], x[0]);
-        for (int p=1; p<P; p++) {
-            cc->EvalAddInPlace(x[0], cc->EvalMultNoRelin(x[p], x[p]));
-        }
+        cc->EvalAddManyInPlace(x);
         _maskCtxt(x[0], ip);
+        cc->ModReduceInPlace( x[0] );
+
 //cout <<"========="; testDecrypt(x[0]);
 
         if ( out[ic] == nullptr ) out[ic] = x[0];
@@ -244,9 +246,9 @@ void HEInfer::ConvReluAP1d(CVec& out, const CVec& in, Layer& l, const int S=1, c
         out[i] = cc->Relinearize( out[i] );
         #else
         cc->RelinearizeInPlace( out[i] );
-        cc->ModReduceInPlace( out[i] );    // Totally rescale 3 times, may be reduced to 2 if moving into the loop-p,
-        cc->ModReduceInPlace( out[i] );
-        cc->ModReduceInPlace( out[i] );
+        //cc->ModReduceInPlace( out[i] );    // Totally rescale 3 times, may be reduced to 2 if moving into the loop-p,
+        //cc->ModReduceInPlace( out[i] );
+        //cc->ModReduceInPlace( out[i] );
         #endif
     }
 }
@@ -294,18 +296,15 @@ void HEInfer::DenseSigmoid(CVec& out, const CVec& in, Layer& l) {
         for(int j = pinf; j < getSlots(); j*=2)  {
             cc->EvalAddInPlace(x, cc->EvalAtIndex(x, j) );
         }
+        cc->ModReduceInPlace( x );
 
 #ifndef SIGMOID_ORD_1
         // Another expression in [-8,8]:  0.5 - 1.2/8 * x + 0.81562/8 * x**3
         // Taylor expansion Sigmoid: 0.5 + 0.25*x - x**3/48
 
-        auto x2   = cc->EvalMult(x, x);    // d2, c3
-        cc->ModReduceInPlace( x2 );
-        cc->ModReduceInPlace( x2 );
-        cc->ModReduceInPlace( x2 );
-        auto xo48 = cc->EvalMult(x, c3);
-        cc->ModReduceInPlace( xo48 );
-        auto x3   = cc->EvalMult(x2, xo48);   // fail !!!
+        auto x2   = cc->EvalMult(x, x);   cc->ModReduceInPlace( x2 );
+        auto xo48 = cc->EvalMult(x, c3);  cc->ModReduceInPlace( xo48 );
+        auto x3   = cc->EvalMult(x2, xo48);
 
         auto xo4  = cc->EvalMult(x, c1);
         cc->EvalAddInPlace(x3, xo4);

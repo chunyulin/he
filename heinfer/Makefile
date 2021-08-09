@@ -10,7 +10,7 @@ LIBS=-L/usr/lib64 -lhdf5 -lhdf5_cpp \
      -L${PALISADE}/lib -Wl,-rpath=${PALISADE}/lib -lPALISADEpke -lPALISADEcore
 
 
-OBJS=preprocess.o heinfer.o main.o
+OBJS=encrypt.o heinfer.o main.o
 
 
 all :main
@@ -23,7 +23,7 @@ clean:
 	rm -f  *.o main
 
 
-preprocess.o: heinfer.h 
+encrypt.o: heinfer.h 
 
 heinfer.o: heinfer.h
 
@@ -31,7 +31,13 @@ main.o: utils.h heinfer.h
 
 
 ##################################
+preprocess: preprocess.o
+	$(CXX) $(OPT) $? -o $@
+
 gothru: gothru.o
+	$(CXX) $(OPT) $? -o $@ $(LIBS)
+
+test: test.o
 	$(CXX) $(OPT) $? -o $@ $(LIBS)
 
 

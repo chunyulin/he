@@ -1,22 +1,7 @@
-export OMP_NUM_THREADS=4
-
+export OMP_NUM_THREADS=32
 
 module purge
 module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0
 
-
-#PALISADE=/pkg/he/palisade-1.11.3fix
-#TARGET="idash_test"
-#
-#for t in ${TARGET}; do
-#  g++  ${t}.cpp -O3 -std=c++17 -o ${t} -L${PALISADE}/lib -fopenmp \
-#   -Wl,-rpath=${PALISADE}/lib \
-#   -lPALISADEpke -lPALISADEcore \
-#   -I${PALISADE}/include \
-#   -I${PALISADE}/include/palisade \
-#   -I${PALISADE}/include/palisade/pke \
-#   -I${PALISADE}/include/palisade/core  \
-#   -I${PALISADE}/include/palisade/third-party/include
-#done
 
 

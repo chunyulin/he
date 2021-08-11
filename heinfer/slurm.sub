@@ -1,18 +1,20 @@
 #! /bin/bash
-#SBATCH -J heinfer_vertical
-#SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=16
+#SBATCH -J heinfer_small
+#SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=32
 ###SBATCH --nodelist=ib04
 module purge
 module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0
-export OMP_NUM_THREADS=16
+export OMP_NUM_THREADS=32
 
-NBP="512 1024 2048 4096"
-PINF="2048 4096 8192 16384"
+PINF="4096 8192 16384"
 
-for n in ${NBP}; do
+
 for p in ${PINF}; do
- ./main CNN_fs8.h5 ${n} ${p}
-done
+ ./main data.bin CNN634_s641.best.h5  ${p} 99999 55 55
+ ./main data.bin CNN634_s641.best.h5  ${p} 99999 50 55
+ ./main data.bin CNN634_s641.best.h5  ${p} 99999 45 55
+ ./main data.bin CNN634_s641.best.h5  ${p} 99999 40 55
+ ./main data.bin CNN634_s641.best.h5  ${p} 99999 35 55
 done
 
 echo "--- Walltime: ${SECONDS} sec."

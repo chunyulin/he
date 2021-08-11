@@ -1,6 +1,7 @@
 #pragma once
 
-//#define  SANITY_CHECK
+//#define  SANITY_CHECK_MODEL
+//#define  SANITY_CHECK_INPUT
 
 #include <omp.h>
 #include <iostream>
@@ -86,14 +87,18 @@ class HEInfer {
         Plaintext ptx;
         cc->Decrypt(keyPair.secretKey, ctx, &ptx);
         auto v = ptx->GetRealPackedValue();
-        cout << "   [Test] LDC: " << ctx->GetLevel() << " " << ctx->GetDepth() << " " <<  ctx->GetElements().size()
-             << "   Err/Pre: " << ptx->GetLogError() << "/" << ptx->GetLogPrecision() << "    ";
-        for (int p=0;p<PF;p++) cout << v[p*pinf] << " "; 
-        cout  << endl;
+        cout << "[Test] LDC: " << ctx->GetLevel() << " " << ctx->GetDepth() << " " <<  ctx->GetElements().size()
+             << "   Err/Pre: " << ptx->GetLogError() << "/" << ptx->GetLogPrecision() << endl;
+        for (int p=0;p<PF; p++) {
+            cout << p << ": ";
+            for (int i=0;i<10;i++) printf("  %.8f", v[p*pinf+i]);
+            cout  << endl;
+        }
         //ptx->SetLength(l); // caution: this will remove the rest.
     }
 
     private:
+    vector<Plaintext> _mask;
     void _maskCtxt(Ciphertext<DCRTPoly>& ctx, int p);
 
     #ifdef VERBOSE_HE
@@ -104,7 +109,6 @@ class HEInfer {
     //ccTest(keyPair);  exit(0);
     //ccTestRotate(keyPair);  exit(0);
     #endif
-
 };
 
 

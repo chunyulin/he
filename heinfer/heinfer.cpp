@@ -84,6 +84,13 @@ HEInfer::HEInfer(int ninf_, int nbp_, int nMults_, int depth_, int sf_, int fmod
     printf("   Infer packing = %d   Packing factor = %d   (Slot util.: %.1f%)\n\n", pinf, PF, float(ninf)/pinf*100);
 
     //ccInfo(cc);
+
+    // Prepare masking plaintext
+    for (int p=0; p<PF; p++) {
+        vector<double> v(getSlots(),0);
+        std::fill (v.begin()+p*pinf, v.begin()+p*pinf+ninf, 1.0);
+        _mask.emplace_back(cc->MakeCKKSPackedPlaintext(v, 1));
+    }
 }
 
 void HEInfer::genKeys() {
@@ -112,8 +119,7 @@ void HEInfer::genKeys() {
         cc->EvalAtIndexKeyGen(keyPair.secretKey, ilist);
         DURATION tRotKG = TOC(t1);
         cout << tRotKG.count() << " sec." << endl;
-    }                   
-
+    }
 }
 
 void HEInfer::test() {
@@ -135,9 +141,7 @@ void HEInfer::test() {
 
 void HEInfer::_maskCtxt(Ciphertext<DCRTPoly>& ctx, int p) {
     //if (op!=0) x[0] = cc->EvalAtIndex(x[0], (PF-op)*pinf); // Rotation seems introduce too much noise!?!
-    vector<double> v( getSlots(), 0.0);
-    std::fill (v.begin()+p*pinf, v.begin()+p*pinf+ninf, 1.0);
-    ctx = cc->EvalMult(ctx, cc->MakeCKKSPackedPlaintext(v, 1) );
+    ctx = cc->EvalMult(ctx, _mask[p]);
     cc->RescaleInPlace(ctx);
 }
 
@@ -160,7 +164,10 @@ void HEInfer::ConvReluAP1d(CVec& out, const CVec& in, Layer& l, const int S=1, c
     const int F=l.wd[2];
     const int I=l.getOutDim();
 
-#ifdef SANITY_CHECK
+//cout << endl << "w[F]: ";for (int f=0;f<F;f++) printf("%.10f  " , l.w[f]);cout << endl;
+//cout << endl << "b[F]: ";for (int f=0;f<F;f++) printf("%.10f  " , l.b[f]);cout << endl;
+
+#ifdef SANITY_CHECK_MODEL
     #pragma omp parallel for
     for (int i=0; i<K*C*F; i++) l.w[i] = 1.0/(K*C)/sqrt(P);
     #pragma omp parallel for
@@ -176,9 +183,10 @@ void HEInfer::ConvReluAP1d(CVec& out, const CVec& in, Layer& l, const int S=1, c
     // Convolution index:  starting from [i*S*C+c]
     // for-loop over each output neuron and filters
     #pragma omp parallel for
-    for (int ic = 0; ic<out.size(); ic++)    // index for out-ciphertext
-    for (int ip = 0; ip<PF;         ip++) {  // packing index in the out-ciphertext. Not parallelable.
-        int i = (ic*PF+ip)/F;
+    for (int ic = 0; ic<out.size(); ic++) {    // (physcial index on packing space) index for out-ciphertext
+      for (int ip = 0; ip<PF;         ip++) {  // packing index in the out-ciphertext. Not parallelable.
+
+        int i = (ic*PF+ip)/F;    // logical output indices
         int f = (ic*PF+ip)%F;
 
         if (ic*PF+ip >= I*F) continue;
@@ -191,8 +199,7 @@ void HEInfer::ConvReluAP1d(CVec& out, const CVec& in, Layer& l, const int S=1, c
 
             vector<double> w( getSlots(), 0.0);
 
-            
-            for (int k=0; k<K; k++)   // TODO:  Can this part go parallel ?
+            for (int k=0; k<K; k++)   // Note: Can this part go parallel ?
             for (int c=0; c<C; c++) {
                 int kl = ((i*P+p)*S+k)*C+c;
                 int kc = kl/PF;        // which ciphertext
@@ -217,41 +224,72 @@ void HEInfer::ConvReluAP1d(CVec& out, const CVec& in, Layer& l, const int S=1, c
             for(int j = pinf; j < getSlots(); j*=2)  {
                 cc->EvalAddInPlace(x[p], cc->EvalAtIndex(x[p], j));
             }
+            x[p] = cc->EvalAdd(x[p], l.b[f]);
 
             cc->ModReduceInPlace( x[p] );
 
-//cout <<"========="; testDecrypt(x[0]);
-            // Average pool of ReLU [x^2]
+            // ReLU (x^2)
             x[p] = cc->EvalMultNoRelin(x[p], x[p]);
         }  // end of p
 
+        // Average pool
         cc->EvalAddManyInPlace(x);
         _maskCtxt(x[0], ip);
         cc->ModReduceInPlace( x[0] );
 
 //cout <<"========="; testDecrypt(x[0]);
 
+        #pragma omp critical
+        {
         if ( out[ic] == nullptr ) out[ic] = x[0];
         else                      cc->EvalAddInPlace(out[ic], x[0]);
-        
-        if (ip==0&&ic%10==0) cout << "." << std::flush;
-    
-    }  // end of output neurons
+        }
+        //if (ip==0&&ic%10==0) cout << "." << std::flush;
+      
+      }
+
+      cc->RelinearizeInPlace( out[ic] );
+
+    }  // end of output ciphter text (ic)
 
     cout << endl;
+}
 
-    #pragma omp parallel for
-    for (int i=0; i<out.size(); i++) {
-        #ifdef AUTORESCALE
-        out[i] = cc->Relinearize( out[i] );
-        #else
-        cc->RelinearizeInPlace( out[i] );
-        //cc->ModReduceInPlace( out[i] );    // Totally rescale 3 times, may be reduced to 2 if moving into the loop-p,
-        //cc->ModReduceInPlace( out[i] );
-        //cc->ModReduceInPlace( out[i] );
-        #endif
+/**
+ *  Conv1D:  (only support dilation = 1)
+ *  Y_{i,f} = Pool[ \sigma ( X_{S*i+k,c}*W_{k,c,f} + B_{f} ) ]       for each {i, f}
+ */
+//void HEInfer::ConvReluAP1d_plain(vector<vector<double>>&in, Layer& l, const int S=1, const int P=2) {
+void __ConvReluAP1d_plain(vector<vector<double>>&in, Layer& l, const int S=1, const int P=2) {
+
+    const int K=l.wd[0];
+    const int C=l.wd[1];
+    const int F=l.wd[2];
+    const int I=l.getOutDim();
+
+    for (int f = 0; f<F; f++) {
+      for (int i = 0; i<I; i++) {
+
+        vector<double> x(P,0);
+        
+        #pragma omp parallel for
+        for (int p=0; p<P; p++) {
+
+            x[p] =  1;
+            for (int k=0; k<K; k++)
+            for (int c=0; c<C; c++) {
+                int kl = ((i*P+p)*S+k)*C+c;
+                x[p] += in[i][0]*l.w[(k*C+c)*F+f];
+
+            }   // end of partial conv sum
+
+            // ReLU (x^2)
+            x[p] = x[p]*x[p];
+        }
+      }
     }
 }
+
 
 /**
  *  Dense:
@@ -264,7 +302,10 @@ void HEInfer::DenseSigmoid(CVec& out, const CVec& in, Layer& l) {
     const int I=l.wd[1];
     printf("Dense layer : %d x %d,     ctxt ( %d x %d )\n", J, I, in.size(), out.size());
 
-#ifdef  SANITY_CHECK
+//cout << endl << "w[F]: ";for (int f=0;f<J;f++) printf("%.6f  " , l.w[f]);cout << endl;
+//cout << endl << "b[F]: ";for (int f=0;f<I;f++)  printf("%.6f  " , l.b[f]);cout << endl;
+
+#ifdef  SANITY_CHECK_MODEL
     #pragma omp parallel for
     for (int i=0; i<I*J; i++) l.w[i] = 1.0/(J);
     #pragma omp parallel for
@@ -273,43 +314,48 @@ void HEInfer::DenseSigmoid(CVec& out, const CVec& in, Layer& l) {
 
     //const double c0 = 0.5,  c1 = 0.25,     c3 = - 1.0/48;   // Taylor expansion
     const double   c0 = 0.5,  c1 = - 1.2/8.0,  c3 = 0.81562/8.0;
-  
+
     #pragma omp parallel for
-    for (int i = 0; i<out.size();  i++) {
-    
-        Ciphertext<DCRTPoly> x;
-        for (int jb = 0; jb<in.size();  jb++) {
-        
+    for (int i = 0; i<out.size();  i++) {         // index of out-ciphertext
+
+        CVec x(in.size());
+        #pragma omp parallel for
+        for (int jb = 0; jb<in.size();  jb++) {   // loop over in-ciphertext (big-jump over PF)
+
             vector<double> wv( getSlots(), 0.0);
             #pragma omp parallel for
             for (int jp = 0; jp<PF; jp++) {
-                if (jb*PF+jp >= J) continue;
-                std::fill (wv.begin()+jp*pinf, wv.begin()+jp*pinf+ninf, l.w[(jb*PF+jp)*I+i]);
+                if (jb*PF+jp < J) std::fill (wv.begin()+jp*pinf, wv.begin()+jp*pinf+ninf, l.w[(jb*PF+jp)*I+i]);
             }
             Plaintext w = cc->MakeCKKSPackedPlaintext(wv, 1);
 
-            if (x == nullptr)  x = cc->EvalAdd( cc->EvalMult( in[jb], w), l.b[i] );
-            else               cc->EvalAddInPlace(x,  cc->EvalMult( in[jb], w));
+            x[jb] = cc->EvalMult( in[jb], w );
         }
+
+        cc->EvalAddManyInPlace(x);
 
         // Sum over packing group
         for(int j = pinf; j < getSlots(); j*=2)  {
-            cc->EvalAddInPlace(x, cc->EvalAtIndex(x, j) );
+            cc->EvalAddInPlace(x[0], cc->EvalAtIndex(x[0], j) );
         }
-        cc->ModReduceInPlace( x );
+        
+        out[i] = cc->EvalAdd( x[0], l.b[i]);
+        cc->ModReduceInPlace( out[i] );
 
 #ifndef SIGMOID_ORD_1
         // Another expression in [-8,8]:  0.5 - 1.2/8 * x + 0.81562/8 * x**3
         // Taylor expansion Sigmoid: 0.5 + 0.25*x - x**3/48
 
-        auto x2   = cc->EvalMult(x, x);   cc->ModReduceInPlace( x2 );
-        auto xo48 = cc->EvalMult(x, c3);  cc->ModReduceInPlace( xo48 );
+
+        auto x2   = cc->EvalMult(out[i], out[i]);   cc->ModReduceInPlace( x2 );
+        auto xo48 = cc->EvalMult(out[i], c3);     cc->ModReduceInPlace( xo48 );
         auto x3   = cc->EvalMult(x2, xo48);
 
-        auto xo4  = cc->EvalMult(x, c1);
+        auto xo4  = cc->EvalMult(out[i], c1);
         cc->EvalAddInPlace(x3, xo4);
         cc->ModReduceInPlace(x3);
         out[i] = cc->EvalAdd(x3, c0);
+
 #else
         cout<< "Not implement yet." << endl;
 #endif
@@ -318,7 +364,7 @@ void HEInfer::DenseSigmoid(CVec& out, const CVec& in, Layer& l) {
 }
 
 /**
- *  Dense:
+ *  Dense:   (Not used)
  *  Y_i = X_j*W_ji * + B_i
  *
  */
@@ -330,7 +376,7 @@ void HEInfer::DenseSigmoid_packed(CVec& out, const CVec& in, Layer& l) {
     const int I=l.wd[1];
     printf("Dense layer : %d x %d,     ctxt ( %d x %d )\n", J, I, in.size(), out.size());
 
-#ifdef  SANITY_CHECK
+#ifdef  SANITY_CHECK_MODEL
     #pragma omp parallel for
     for (int i=0; i<I*J; i++) l.w[i] = 0.5/(J);
     #pragma omp parallel for
@@ -393,7 +439,6 @@ void HEInfer::DenseSigmoid_packed(CVec& out, const CVec& in, Layer& l) {
 #endif
 
         _maskCtxt(x, ip);
-        
         if ( out[ic] == nullptr ) out[ic] = x;
         else                      cc->EvalAddInPlace(out[ic], x);
     }
@@ -402,7 +447,6 @@ void HEInfer::DenseSigmoid_packed(CVec& out, const CVec& in, Layer& l) {
 vector<vector<double>> HEInfer::Decrypt(const CVec& c) {
 
     vector<vector<double>> v(c.size(), vector<double>(ninf));
-    
     #pragma omp parallel for
     for (int i=0; i<c.size(); i++) {
         Plaintext prob;
@@ -414,7 +458,7 @@ vector<vector<double>> HEInfer::Decrypt(const CVec& c) {
         //  why not work properly??
         auto iter = prob->GetRealPackedValue().begin();
         std::copy(iter, iter+ninf, v[i].begin());
-        #endif    
+        #endif
 
     }
     return v;

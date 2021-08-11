@@ -22,8 +22,8 @@ int main(int argc, char* argv[]) {
         exit(0);
     }
 
-    if (argc > 3)   nbp    = atoi(argv[3]);
-    if (argc > 4)   pinf    = atoi(argv[4]);
+    if (argc > 3)   pinf    = atoi(argv[3]);
+    if (argc > 4)   nbp    = atoi(argv[4]);
     if (argc > 5)   sf = atoi(argv[5]);
     if (argc > 6)   firstmod = atoi(argv[6]);
     if (argc > 7)   ringdim = atoi(argv[7]);
@@ -57,8 +57,9 @@ int main(int argc, char* argv[]) {
     Layer conv2 (h5d, "/model_weights/conv2/conv2/kernel:0",   "/model_weights/conv2/conv2/bias:0");
     Layer conv3 (h5d, "/model_weights/conv3/conv3/kernel:0",   "/model_weights/conv3/conv3/bias:0");
     Layer output(h5d, "/model_weights/output/output/kernel:0", "/model_weights/output/output/bias:0");
-    const vector<int> STRIDE {6,4,2};
+    const vector<int> STRIDE {6,4,1};
     const vector<int> POOLING{2,2,2};
+    printf("   Stride: %d %d %d      Pooling: %d %d %d.\n", STRIDE[0], STRIDE[1], STRIDE[2], POOLING[0], POOLING[1], POOLING[2]);
 
     // pre-calculate output dimension of each layers
     int CH0 = conv1.wd[1];
@@ -95,13 +96,15 @@ int main(int argc, char* argv[]) {
     CVec ctx1(nc[1]);     // out of C1 layer 
 
     TIC(t)
-    cout << "Encoding & Encrypting ...\t";
+    cout << "Encoding & Encrypting ... ";
     he.EncodeEncrypt(ctx0, fasta);
     DURATION tEnc = TOC(t);
     cout << tEnc.count() << " sec." << endl;
-    fasta.clear();
+    cout << "   Dataset dimension: "<< fasta.size() << " x " << fasta[0].size() << endl;
+    fasta.clear(); fasta.shrink_to_fit();
 
-    he.testDecrypt(ctx0[0]);
+
+    //he.testDecrypt(ctx0[0]);
 
     cout << "Evalating ..." << endl;
     TIC(t);
@@ -109,25 +112,25 @@ int main(int argc, char* argv[]) {
     DURATION tl = TOC(t);
     cout << "   Conv1... " << tl.count() << " sec." << endl;
     
-    he.testDecrypt(ctx1[0]);
+    //he.testDecrypt(ctx1[0]);
 
-    ctx0.clear();
+    ctx0.clear(); ctx0.shrink_to_fit();
     CVec ctx2(nc[2]);     // out of C3
     he.ConvReluAP1d(ctx2, ctx1, conv2, STRIDE[1], POOLING[1]);
     tl = TOC(t);
     cout << "   Conv2... " << tl.count() << " sec." << endl;
 
-    he.testDecrypt(ctx2[0]);
+    //he.testDecrypt(ctx2[0]);
 
-    ctx1.clear();
+    ctx1.clear(); ctx1.shrink_to_fit();
     CVec ctx3(nc[3]);     // out of C3
     he.ConvReluAP1d(ctx3, ctx2, conv3, STRIDE[2], POOLING[2]);
     tl = TOC(t);
     cout << "   Conv3... " << tl.count() << " sec." << endl;
 
-    he.testDecrypt(ctx3[0]);
+    //he.testDecrypt(ctx3[0]);
 
-    ctx2.clear();
+    ctx2.clear(); ctx2.shrink_to_fit();
     CVec ctx4(nc[4]);     // out of C3
     he.DenseSigmoid(ctx4, ctx3, output);
     DURATION tEvalAll = TOC(t);
@@ -140,20 +143,25 @@ int main(int argc, char* argv[]) {
     DURATION tDec = TOC(t);
     cout << tDec.count() << " sec." << endl;
 
-    he.testDecrypt(ctx4[0]);
+    //he.testDecrypt(ctx4[0]);
 
     // write prob
     std::ofstream outprob("prob.txt");
     outprob << "## probability for label 1,2,3,4\n";
     for (int i=0; i<ninf; i++) {
-        for (int j=0; j<4; j++) outprob << prob[j][i] << "\t"; 
+        for (int j=0; j<4; j++) outprob << setw(13) << prob[j][i] << ",";
         outprob << endl; 
     }
     outprob.close();
 
+    cout << "Prediction of first 4 item: " << endl;
+    for (int i=0; i<4; i++) {
+        for (int j=0; j<4; j++) cout << "   " << prob[j][i];
+        cout << endl;
+    }
     
     double tmem = getMemoryUsage();
-    printf("[Summary] Memory/MB: %f NBP: %d NCtxt: %d PF: %d RD: %d nMult: %d Time: %f %f %f %f\n", 
+    printf("[Summary] Memory/MB: %.2f NBP: %d NCtxt: %d PF: %d RD: %d nMult: %d Time: %f %f %f %f\n", 
             tmem/1024.0, nbp, n_ctx, he.getPackingFactor(), he.getRingDim(), nMults,
             tPre.count(), tEnc.count(), tEvalAll.count(), tDec.count());
     

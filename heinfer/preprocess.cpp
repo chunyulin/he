@@ -72,21 +72,29 @@ void  preprocess_fasta(const char fout[], const char fin[], int SEGLEN, int kmer
         if (n<nmin) nmin = n;
     }
     fhandle.close();
-    
+
     // Write to binary
     std::ofstream outbin (fout, std::ios::out | std::ios::binary);
     outbin.write (reinterpret_cast<char*>(&nmin), sizeof(nmin));
     for (int i=0; i<ninf; i++) {
         outbin.write ( reinterpret_cast<char*>(data[i].data()), nmin*sizeof(data[0][0]));
     }
+    outbin.close();
 
+    if (readlabel)  {
+
+        // Write label
+        std::ofstream flabel ("label.txt", std::ios::out | std::ios::trunc);
+        for (int i=0; i<ninf; i++) { flabel << y[i] << endl; }
+        flabel.close();
+        cout << "Label.txt written." << endl;
+    }
+/*
     cout<< "==========="<<endl;
     for (int i=0; i<10; i++) {
         cout << data[0][i] << " ";
     }    cout<< endl << "==========="<<endl;
-    
-    
-    outbin.close();
+*/
 
     cout << ninf << " sequence written. Each has "<< nmin <<" feature input." << endl;
     if (nmin != nmax)

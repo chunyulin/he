@@ -16,7 +16,7 @@ int label2int(string l) {
 //
 //  Read from preprocessed FASTA
 //
-int read_preprocessed(vector<vector<double>>& v, vector<int>& y, const char fname[]) {
+int read_preprocessed(vector<vector<double>>& v, const char fname[]) {
      
     int ninf = 0;
      
@@ -40,22 +40,18 @@ int read_preprocessed(vector<vector<double>>& v, vector<int>& y, const char fnam
 
     vector<double> pv(ninf);
     for (int i=0; i<nbp; i++) {
-        #ifdef  SANITY_CHECK
-        for (int j=0; j<ninf; j++)  pv[j] = 1.0;
+        #ifdef  SANITY_CHECK_INPUT
+        for (int j=0; j<ninf; j++)  pv[j] = 0.5;
         #else
         for (int j=0; j<ninf; j++)  pv[j] = transpose[j][i];
         #endif
         v.push_back(pv);
     }
-    
     return nbp;
 }
 
 void HEInfer::EncodeEncrypt(CVec& ctx, const vector<vector<double>>& x)  {
 
-cout << "Dataset dimension: "<< x.size() << " x " << x[0].size() << endl;
-int a;
-std::cin >> a;
     #pragma omp parallel for
     for (int i=0; i<ctx.size(); i++) {
 

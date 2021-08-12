@@ -60,6 +60,7 @@ void  preprocess_fasta(const char fout[], const char fin[], int SEGLEN, int kmer
     string label, line;
     int nmax=0, nmin=SEGLEN;
     for (int i=0; i<ninf; i++) {
+        
         getline(fhandle, line);
         if (readlabel)  {
             label = line.substr(1, line.find('_')-1);
@@ -89,12 +90,6 @@ void  preprocess_fasta(const char fout[], const char fin[], int SEGLEN, int kmer
         flabel.close();
         cout << "Label.txt written." << endl;
     }
-/*
-    cout<< "==========="<<endl;
-    for (int i=0; i<10; i++) {
-        cout << data[0][i] << " ";
-    }    cout<< endl << "==========="<<endl;
-*/
 
     cout << ninf << " sequence written. Each has "<< nmin <<" feature input." << endl;
     if (nmin != nmax)
@@ -106,17 +101,21 @@ void  preprocess_fasta(const char fout[], const char fin[], int SEGLEN, int kmer
 
 int main(int argc, char* argv[]) {
 
-    int kmer=3, stride=3, SEGLEN=28500;
+    int kmer=3, stride=3, SEGLEN=28500, ninf=2000;
+    int label = 0;
 
     if (argc<3) {
-        cout << "Usage: "<< argv[0] << " <seg.bin> <fasta file> [SEGLEN=28500] [kmer=3] [offset=3]" << endl;
+        cout << "Usage: "<< argv[0] << " <output.bin> <fasta file> [readlabel=0] [SEGLEN=28500] [ninf=2000] [kmer=3] [offset=3]" << endl;
+        return 0;
     }
     
-    if (argc>3) SEGLEN = atoi(argv[3]);
-    if (argc>4) kmer   = atoi(argv[4]);
-    if (argc>5) stride = atoi(argv[5]);
+    if (argc>3) label  = atoi(argv[3]);
+    if (argc>4) SEGLEN = atoi(argv[4]);
+    if (argc>5) ninf   = atoi(argv[5]);
+    if (argc>6) kmer   = atoi(argv[6]);
+    if (argc>7) stride = atoi(argv[7]);
     
-    preprocess_fasta(argv[1], argv[2], SEGLEN, kmer, stride, 1);
+    preprocess_fasta(argv[1], argv[2], SEGLEN, kmer, stride, label, ninf);
 
 
 

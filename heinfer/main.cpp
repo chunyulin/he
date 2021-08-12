@@ -1,7 +1,7 @@
 #include "utils.h"
 #include "heinfer.h"
 
-int read_preprocessed(vector<vector<double>>& v, vector<int>& y, const char fname[]);
+int read_preprocessed(vector<vector<double>>& v, const char fname[]);
 
 
 int main(int argc, char* argv[]) {
@@ -13,8 +13,8 @@ int main(int argc, char* argv[]) {
     usint ringdim = 0;
     const char* DataFile  = argv[1];
     const char* ModelFile = argv[2];
-    int ninf=2000, nbp = 28500;
-    usint pinf = 0;
+    int ninf, nbp = 28500;
+    usint pinf = 4096;
 
     if (argc == 1) {
         printf("Usage: %s <data.bin> <model.h5> [pinf=%d] [nbp=%d] [sf=%d] [decryBits=%d] [rD=%d] [nMults=%d] [depth=%d] \n", 
@@ -38,9 +38,10 @@ int main(int argc, char* argv[]) {
 
     TIC(t)
     cout << "Reading data file " << DataFile << " ... ";
-    vector<int> label(ninf);
     vector<vector<double>> fasta;
-    int nbp_read = read_preprocessed(fasta, label, DataFile);
+    int nbp_read = read_preprocessed(fasta, DataFile);
+    ninf = fasta[0].size();
+    
     DURATION tPre = TOC(t);
     cout << tPre.count() << " sec." << endl;
     cout << "   Read " << ninf << " data with each nbp = " << nbp_read << endl;
@@ -146,20 +147,23 @@ int main(int argc, char* argv[]) {
     //he.testDecrypt(ctx4[0]);
 
     // write prob
-    std::ofstream outprob("prob.txt");
+    std::ofstream outprob("prob.csv");
     outprob << "## probability for label 1,2,3,4\n";
-    for (int i=0; i<ninf; i++) {
-        for (int j=0; j<4; j++) outprob << setw(13) << prob[j][i] << ",";
-        outprob << endl; 
+    for (int i=0; i<ninf; i++)
+    for (int j=0; j<4; j++) {
+        outprob << setprecision(8) << prob[j][i];
+        if (j==3) cout << endl; else cout << ",";
     }
     outprob.close();
 
-    cout << "Prediction of first 4 item: " << endl;
+/*
+    cout << "Scores for the first 4 item: " << endl;
     for (int i=0; i<4; i++) {
         for (int j=0; j<4; j++) cout << "   " << prob[j][i];
         cout << endl;
     }
-    
+*/
+
     double tmem = getMemoryUsage();
     printf("[Summary] Memory/MB: %.2f NBP: %d NCtxt: %d PF: %d RD: %d nMult: %d Time: %f %f %f %f\n", 
             tmem/1024.0, nbp, n_ctx, he.getPackingFactor(), he.getRingDim(), nMults,

@@ -454,6 +454,9 @@ vector<vector<double>> HEInfer::Decrypt(const CVec& c) {
         auto vc = prob->GetRealPackedValue();
         for(int j=0; j<ninf; j++) v[i][j] = vc[j];
 
+        #pragma omp critical
+        cout << "   Err/Pre: " << prob->GetLogError() << " / " << prob->GetLogPrecision() << endl;
+
         #if 0
         //  why not work properly??
         auto iter = prob->GetRealPackedValue().begin();

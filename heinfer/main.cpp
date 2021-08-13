@@ -107,7 +107,7 @@ int main(int argc, char* argv[]) {
 
     //he.testDecrypt(ctx0[0]);
 
-    cout << "Evalating ..." << endl;
+    cout << "Evaluating ..." << endl;
     TIC(t);
     he.ConvReluAP1d(ctx1, ctx0, conv1, STRIDE[0], POOLING[0]);
     DURATION tl = TOC(t);
@@ -152,7 +152,7 @@ int main(int argc, char* argv[]) {
     for (int i=0; i<ninf; i++)
     for (int j=0; j<4; j++) {
         outprob << setprecision(8) << prob[j][i];
-        if (j==3) cout << endl; else cout << ",";
+        if (j==3) outprob<< endl; else  outprob << ",";
     }
     outprob.close();
 
@@ -165,7 +165,7 @@ int main(int argc, char* argv[]) {
 */
 
     double tmem = getMemoryUsage();
-    printf("[Summary] Memory/MB: %.2f NBP: %d NCtxt: %d PF: %d RD: %d nMult: %d Time: %f %f %f %f\n", 
+    printf("[Summary] Memory(MB): %.2f NBP: %d NCtxt: %d PF: %d RD: %d nMult: %d  Time: %f %f %f %f\n", 
             tmem/1024.0, nbp, n_ctx, he.getPackingFactor(), he.getRingDim(), nMults,
             tPre.count(), tEnc.count(), tEvalAll.count(), tDec.count());
     

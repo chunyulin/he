@@ -3,16 +3,34 @@
 
 int read_preprocessed(vector<vector<double>>& v, const char fname[]);
 
+string parse_model_desc(const char fname[], vector<int>& s, vector<int>& p) {
+
+    std::ifstream fin(fname, std::ios::in);
+    if (!fin) {
+        cout << "Cannot open " << fname<< endl;
+        exit(0);
+    }
+
+    string line, model;
+    fin >> s[0] >> s[1] >> s[2];    getline(fin, line);
+    fin >> p[0] >> p[1] >> p[2];    getline(fin, line);
+    getline(fin, line);  std::stringstream ss(line); 
+    ss >> model;
+    return model;
+}
+
 
 int main(int argc, char* argv[]) {
 
     TIMER t;
     usint nMults = 12; // max 2-depth tower
     usint depth = 3;   // max key for s^2
-    usint sf = 49, firstmod = 53;   // the maxmal setting for 32768 ringdim for 128-bit
+    //usint sf = 49, firstmod = 53;   // the maxmal setting for 32768 ringdim for 128-bit
+    usint sf = 39, firstmod = 45;   // the maxmal setting for 32768 ringdim for 128-bit
     usint ringdim = 0;
     const char* DataFile  = argv[1];
-    const char* ModelFile = argv[2];
+    //const char* ModelFile = argv[2];
+    const char* ModelDesc = argv[2];
     int ninf, nbp = 28500;
     usint pinf = 4096;
 
@@ -30,13 +48,13 @@ int main(int argc, char* argv[]) {
     if (argc > 8)   nMults = atoi(argv[8]);
     if (argc > 9)   depth = atoi(argv[9]);
 
-    cout << "=========  HEInfer ( w/ packing factor ) =========" << endl;
+    cout << "\n=========  HEInfer ( w/ packing factor ) =========" << endl;
     
     int ncore = omp_get_max_threads();
     cout << "# Core : " << ncore << endl << endl;
 
 
-    TIC(t)
+    TIC(t);
     cout << "Reading data file " << DataFile << " ... ";
     vector<vector<double>> fasta;
     int nbp_read = read_preprocessed(fasta, DataFile);
@@ -47,20 +65,26 @@ int main(int argc, char* argv[]) {
     cout << "   Read " << ninf << " data with each nbp = " << nbp_read << endl;
     if (nbp_read < nbp)   nbp = nbp_read;
 
+    TIC(t);
     // Initialize HE context
     HEInfer he(ninf, nbp, nMults, depth, sf, firstmod, ringdim, pinf);
     he.genKeys();
+    DURATION tKG = TOC(t);
     //he.test();
 
-    printf("Reading model parameters ...\n");
-    H5File h5d(ModelFile, H5F_ACC_RDONLY);
+
+    printf("Reading model parameters ... ");
+    vector<int> STRIDE(3);
+    vector<int> POOLING(3);
+    string ModelFile = parse_model_desc(ModelDesc, STRIDE, POOLING);
+    cout << ModelFile << endl;
+    printf("   Stride:  %d %d %d\n", STRIDE[0], STRIDE[1], STRIDE[2]);
+    printf("   Pooling: %d %d %d\n", POOLING[0], POOLING[1], POOLING[2]);
+    H5File h5d(ModelFile.c_str(), H5F_ACC_RDONLY);
     Layer conv1 (h5d, "/model_weights/conv1/conv1/kernel:0",   "/model_weights/conv1/conv1/bias:0");
     Layer conv2 (h5d, "/model_weights/conv2/conv2/kernel:0",   "/model_weights/conv2/conv2/bias:0");
     Layer conv3 (h5d, "/model_weights/conv3/conv3/kernel:0",   "/model_weights/conv3/conv3/bias:0");
     Layer output(h5d, "/model_weights/output/output/kernel:0", "/model_weights/output/output/bias:0");
-    const vector<int> STRIDE {6,4,1};
-    const vector<int> POOLING{2,2,2};
-    printf("   Stride: %d %d %d      Pooling: %d %d %d.\n", STRIDE[0], STRIDE[1], STRIDE[2], POOLING[0], POOLING[1], POOLING[2]);
 
     // pre-calculate output dimension of each layers
     int CH0 = conv1.wd[1];
@@ -96,7 +120,7 @@ int main(int argc, char* argv[]) {
     CVec ctx0(nc[0]);     // input
     CVec ctx1(nc[1]);     // out of C1 layer 
 
-    TIC(t)
+    TIC(t);
     cout << "Encoding & Encrypting ... ";
     he.EncodeEncrypt(ctx0, fasta);
     DURATION tEnc = TOC(t);
@@ -110,31 +134,35 @@ int main(int argc, char* argv[]) {
     cout << "Evaluating ..." << endl;
     TIC(t);
     he.ConvReluAP1d(ctx1, ctx0, conv1, STRIDE[0], POOLING[0]);
-    DURATION tl = TOC(t);
-    cout << "   Conv1... " << tl.count() << " sec." << endl;
+    DURATION tl1 = TOC(t);
+    cout << "   Conv1... " << tl1.count() << " sec." << endl;
     
     //he.testDecrypt(ctx1[0]);
 
     ctx0.clear(); ctx0.shrink_to_fit();
+    TIC(t);
     CVec ctx2(nc[2]);     // out of C3
     he.ConvReluAP1d(ctx2, ctx1, conv2, STRIDE[1], POOLING[1]);
-    tl = TOC(t);
-    cout << "   Conv2... " << tl.count() << " sec." << endl;
+    DURATION tl2 = TOC(t);
+    cout << "   Conv2... " << tl2.count() << " sec." << endl;
 
     //he.testDecrypt(ctx2[0]);
 
     ctx1.clear(); ctx1.shrink_to_fit();
+    TIC(t);
     CVec ctx3(nc[3]);     // out of C3
     he.ConvReluAP1d(ctx3, ctx2, conv3, STRIDE[2], POOLING[2]);
-    tl = TOC(t);
-    cout << "   Conv3... " << tl.count() << " sec." << endl;
+    DURATION tl3 = TOC(t);
+    cout << "   Conv3... " << tl3.count() << " sec." << endl;
 
     //he.testDecrypt(ctx3[0]);
 
     ctx2.clear(); ctx2.shrink_to_fit();
+    TIC(t);
     CVec ctx4(nc[4]);     // out of C3
     he.DenseSigmoid(ctx4, ctx3, output);
-    DURATION tEvalAll = TOC(t);
+    DURATION tl4 = TOC(t);
+    DURATION tEvalAll = tl1+tl2+tl3+tl4;
     cout << "   Dense... Total evaltion time : " << tEvalAll.count() << " sec." << endl;
 
 
@@ -148,7 +176,7 @@ int main(int argc, char* argv[]) {
 
     // write prob
     std::ofstream outprob("prob.csv");
-    outprob << "## probability for label 1,2,3,4\n";
+    outprob << "## Scores of label 1,2,3,4\n";
     for (int i=0; i<ninf; i++)
     for (int j=0; j<4; j++) {
         outprob << setprecision(8) << prob[j][i];
@@ -165,9 +193,9 @@ int main(int argc, char* argv[]) {
 */
 
     double tmem = getMemoryUsage();
-    printf("[Summary] Memory(MB): %.2f NBP: %d NCtxt: %d PF: %d RD: %d nMult: %d  Time: %f %f %f %f\n", 
+    printf("[Summary] Memory(MB): %.2f NBP: %d NCtxt: %d PF: %d RD: %d nMult: %d  Time for Reading Data: %f KeyGen: %f EncodeEncryption: %f Eval: %f Decrpt: %f\n", 
             tmem/1024.0, nbp, n_ctx, he.getPackingFactor(), he.getRingDim(), nMults,
-            tPre.count(), tEnc.count(), tEvalAll.count(), tDec.count());
+            tPre.count(), tKG.count(), tEnc.count(), tEvalAll.count(), tDec.count());
     
     return 0;
 }

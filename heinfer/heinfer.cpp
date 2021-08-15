@@ -312,7 +312,6 @@ void HEInfer::DenseSigmoid(CVec& out, const CVec& in, Layer& l) {
     for (int i=0; i<I; i++)     l.b[i] = 0.0;
 #endif
 
-    //const double c0 = 0.5,  c1 = 0.25,     c3 = - 1.0/48;   // Taylor expansion
     const double   c0 = 0.5,  c1 = - 1.2/8.0,  c3 = 0.81562/8.0;
 
     #pragma omp parallel for
@@ -454,8 +453,8 @@ vector<vector<double>> HEInfer::Decrypt(const CVec& c) {
         auto vc = prob->GetRealPackedValue();
         for(int j=0; j<ninf; j++) v[i][j] = vc[j];
 
-        #pragma omp critical
-        cout << "   Err/Pre: " << prob->GetLogError() << " / " << prob->GetLogPrecision() << endl;
+        //#pragma omp critical
+        //cout << "   Err/Pre: " << prob->GetLogError() << " / " << prob->GetLogPrecision() << endl;
 
         #if 0
         //  why not work properly??

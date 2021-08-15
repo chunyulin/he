@@ -1,15 +1,14 @@
-PALISADE=/pkg/he/palisade-1.11.3fix
-
 CXX=g++
 OPT=-O3 -std=c++17 -fopenmp
 #OPT=-p -O3 -std=c++17 -fopenmp
 INCLUDE=-I${PALISADE}/include -I${PALISADE}/include/palisade \
         -I${PALISADE}/include/palisade/pke \
         -I${PALISADE}/include/palisade/core  \
-        -I${PALISADE}/include/palisade/third-party/include
-LIBS=-L/usr/lib64 -lhdf5 -lhdf5_cpp \
-     -L${PALISADE}/lib -Wl,-rpath=${PALISADE}/lib -lPALISADEpke -lPALISADEcore
+        -I${PALISADE}/include/palisade/third-party/include \
+        -I${HDF5}/include
 
+LIBS=-L/usr/lib64 -lhdf5 -lhdf5_cpp -L${HDF5}/lib -Wl,-rpath=${HDF5}/lib \
+        -L${PALISADE}/lib -Wl,-rpath=${PALISADE}/lib -lPALISADEpke -lPALISADEcore
 
 OBJS=encrypt.o heinfer.o main.o
 
@@ -34,7 +33,9 @@ main.o: utils.h heinfer.h
 ##################################
 preprocess: preprocess.o
 	$(CXX) $(OPT) $? -o $@
-
+random_pick: random_pick.o
+	$(CXX) $(OPT) $? -o $@
+	
 gothru: gothru.o
 	$(CXX) $(OPT) $? -o $@ $(LIBS)
 

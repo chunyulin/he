@@ -1,20 +1,31 @@
 #! /bin/bash
-#SBATCH -J heinfer_small
-#SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=32
+#SBATCH -J heinfer
+#SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=64
 ###SBATCH --nodelist=ib04
 module purge
 module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0
-export OMP_NUM_THREADS=32
+export OMP_NUM_THREADS=64
 
-PINF="4096 8192 16384"
+source /pkg/ENV/pycbc_py2/init
 
+NINF=2000
+PINF=4096
 
-for p in ${PINF}; do
- ./main data.bin CNN634_s641.best.h5  ${p} 99999 55 55
- ./main data.bin CNN634_s641.best.h5  ${p} 99999 50 55
- ./main data.bin CNN634_s641.best.h5  ${p} 99999 45 55
- ./main data.bin CNN634_s641.best.h5  ${p} 99999 40 55
- ./main data.bin CNN634_s641.best.h5  ${p} 99999 35 55
+for i in $(seq 1 5) ; do
+    ./random_pick small.fa /work/lincy/iDASH2021/Challenge/Challenge.fa ${NINF}
+    ./preprocess data.bin small.fa 1 28500 200 ${NINF}
+    time ./main data.bin model.634 ${PINF}
+    python microauc.py label.txt prob.csv
+
+    ./random_pick small.fa /work/lincy/iDASH2021/Challenge/Challenge.fa ${NINF}
+    ./preprocess data.bin small.fa 1 28500 200 ${NINF}
+    time ./main data.bin model.742 ${PINF}
+    python microauc.py label.txt prob.csv
+
+    ./random_pick small.fa /work/lincy/iDASH2021/Challenge/Challenge.fa ${NINF}
+    ./preprocess data.bin small.fa 1 28500 200 ${NINF}
+    time ./main data.bin model.1053 ${PINF}
+    python microauc.py label.txt prob.csv
 done
 
 echo "--- Walltime: ${SECONDS} sec."

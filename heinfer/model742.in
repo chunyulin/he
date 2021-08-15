@@ -1,0 +1,3 @@
+6 4 1                   ## stride
+2 2 2                   ## pooling
+CNN742_s631_9.best.h5   ## model path

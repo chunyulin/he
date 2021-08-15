@@ -1,0 +1,30 @@
+#! /bin/bash
+#SBATCH -A GOV109092
+#SBATCH -p gp2d
+#SBATCH -J heinfer_pf_32gb
+#SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=4
+#SBATCH --mem=32GB
+#SBATCH --gres=gpu:1
+###SBATCH -o compare.log
+
+
+module purge
+module load gcc10/10.2.1
+
+module load miniconda3
+conda activate /opt/ohpc/pkg/kagra/ENV/py37
+
+export OMP_NUM_THREADS=4
+
+SF=$(seq 29 49)
+
+for sf in ${SF}; do
+  ./random_pick small.fa /work/p00lcy01/iDASH2021/Challenge.fa 2000
+  ./preprocess data.bin small.fa 1  28500  0  2000
+  time ./main data.bin CNN770_s631_3.best.h5 4096 28500 ${sf} $((${sf}+4))
+ 
+  python microauc.py label.txt prob.csv
+done
+
+
+echo "--- Walltime: ${SECONDS} sec."

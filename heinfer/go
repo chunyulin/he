@@ -6,7 +6,7 @@ make -j
 ./preprocess test.bin /data/test.fa
 
 ## Classifier
-./main test.bin /data/CNN634_s641.best.h5
+./main test.bin model742.in
 
 
 

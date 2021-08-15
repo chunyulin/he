@@ -1,7 +1,13 @@
-export OMP_NUM_THREADS=32
+export OMP_NUM_THREADS=4
 
 module purge
-module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0
-
-
-
+host=`hostname`
+if [[ $host == *"twcc.ai" ]]; then
+    module load gcc10/10.2.1
+    export PALISADE=/opt/ohpc/pkg/kagra/he/palisade-1.11.3fix
+    export     HDF5=/opt/ohpc/pkg/kagra/hdf5-1.10.7
+else
+    module load cmake Generic-AArch64/RHEL/7/gcc/9.3.0
+    export PALISADE=/pkg/he/palisade-1.11.3fix
+    export     HDF5=/usr
+fi

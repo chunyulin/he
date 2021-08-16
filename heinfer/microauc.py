@@ -11,7 +11,7 @@ LABEL  = sys.argv[1]
 SCORE  = sys.argv[2]
 
 y = label_binarize( np.loadtxt(LABEL) , classes=[1, 2, 3, 4]).astype(float)
-predict = np.loadtxt(SCORE, comments='#', delimiter=',', usecols=(0,1,2,3))
+predict = np.loadtxt(SCORE, comments='#', delimiter='\t', usecols=(1,2,3,4))
 
 
 # MicroAUC

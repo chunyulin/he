@@ -22,14 +22,13 @@ string parse_model_desc(const char fname[], vector<int>& s, vector<int>& p) {
 
 int main(int argc, char* argv[]) {
 
-    TIMER t;
+    TIMER t, tt;
     usint nMults = 12; // max 2-depth tower
     usint depth = 3;   // max key for s^2
     //usint sf = 49, firstmod = 53;   // the maxmal setting for 32768 ringdim for 128-bit
     usint sf = 39, firstmod = 45;   // the maxmal setting for 32768 ringdim for 128-bit
     usint ringdim = 0;
     const char* DataFile  = argv[1];
-    //const char* ModelFile = argv[2];
     const char* ModelDesc = argv[2];
     int ninf, nbp = 28500;
     usint pinf = 4096;
@@ -53,6 +52,7 @@ int main(int argc, char* argv[]) {
     int ncore = omp_get_max_threads();
     cout << "# Core : " << ncore << endl << endl;
 
+    TIC(tt);
 
     TIC(t);
     cout << "Reading data file " << DataFile << " ... ";
@@ -64,6 +64,7 @@ int main(int argc, char* argv[]) {
     cout << tPre.count() << " sec." << endl;
     cout << "   Read " << ninf << " data with each nbp = " << nbp_read << endl;
     if (nbp_read < nbp)   nbp = nbp_read;
+
 
     TIC(t);
     // Initialize HE context
@@ -172,25 +173,35 @@ int main(int argc, char* argv[]) {
     DURATION tDec = TOC(t);
     cout << tDec.count() << " sec." << endl;
 
-    //he.testDecrypt(ctx4[0]);
+    he.testDecrypt(ctx4[0]);
 
-    // write prob
-    std::ofstream outprob("prob.csv");
-    outprob << "## Scores of label 1,2,3,4\n";
-    for (int i=0; i<ninf; i++)
-    for (int j=0; j<4; j++) {
-        outprob << setprecision(8) << prob[j][i];
-        if (j==3) outprob<< endl; else  outprob << ",";
-    }
-    outprob.close();
+    DURATION tRound = TOC(tt);
 
-/*
-    cout << "Scores for the first 4 item: " << endl;
-    for (int i=0; i<4; i++) {
-        for (int j=0; j<4; j++) cout << "   " << prob[j][i];
-        cout << endl;
+
+
+    { // write prob
+    std::ofstream fout("prob.csv");
+    fout << "## [Genome id] [Strain 1 score] [Strain 2 score] [Strain 3 score] [Strain 4 score]" << endl;
+    for (int i=0; i<ninf; i++) {
+        fout << i+1 << "\t";
+        for (int j=0; j<4; j++) {
+            fout << setprecision(8) << prob[j][i];
+            if (j==3) fout << endl; else  fout << "\t";
+        }
     }
-*/
+    fout.close();
+    }
+    
+    
+    { // write time
+    std::ofstream fout("timing.csv");
+    fout << "## round trip, encryption, computation, decryption \n";
+    fout << setprecision(4) << tRound.count()  << "," <<
+                               tEnc.count()    << "," <<
+                               tEvalAll.count()<< "," <<
+                               tDec.count()  << endl;
+    fout.close();
+    }
 
     double tmem = getMemoryUsage();
     printf("[Summary] Memory(MB): %.2f NBP: %d NCtxt: %d PF: %d RD: %d nMult: %d  Time for Reading Data: %f KeyGen: %f EncodeEncryption: %f Eval: %f Decrpt: %f\n", 

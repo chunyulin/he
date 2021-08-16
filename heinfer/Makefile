@@ -20,7 +20,7 @@ main: $(OBJS)
 .cpp.o:
 	$(CXX) $(OPT) $(INCLUDE) $< -c -o $@ $(DEBUG)
 clean:
-	rm -f  *.o main
+	rm -f  *.o main preprocess preprocess_mask random_pick
 
 
 encrypt.o: heinfer.h 
@@ -32,6 +32,8 @@ main.o: utils.h heinfer.h
 
 ##################################
 preprocess: preprocess.o
+	$(CXX) $(OPT) $? -o $@
+preprocess_mask: preprocess_mask.o
 	$(CXX) $(OPT) $? -o $@
 random_pick: random_pick.o
 	$(CXX) $(OPT) $? -o $@

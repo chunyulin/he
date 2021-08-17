@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     usint nMults = 12; // max 2-depth tower
     usint depth = 3;   // max key for s^2
     //usint sf = 49, firstmod = 53;   // the maxmal setting for 32768 ringdim for 128-bit
-    usint sf = 39, firstmod = 45;   // the maxmal setting for 32768 ringdim for 128-bit
+    usint sf = 45, firstmod = 53;   // the maxmal setting for 32768 ringdim for 128-bit
     usint ringdim = 0;
     const char* DataFile  = argv[1];
     const char* ModelDesc = argv[2];
@@ -173,10 +173,9 @@ int main(int argc, char* argv[]) {
     DURATION tDec = TOC(t);
     cout << tDec.count() << " sec." << endl;
 
-    he.testDecrypt(ctx4[0]);
+    //he.testDecrypt(ctx4[0]);
 
     DURATION tRound = TOC(tt);
-
 
 
     { // write prob
@@ -191,8 +190,7 @@ int main(int argc, char* argv[]) {
     }
     fout.close();
     }
-    
-    
+
     { // write time
     std::ofstream fout("timing.csv");
     fout << "## round trip, encryption, computation, decryption \n";
@@ -207,6 +205,6 @@ int main(int argc, char* argv[]) {
     printf("[Summary] Memory(MB): %.2f NBP: %d NCtxt: %d PF: %d RD: %d nMult: %d  Time for Reading Data: %f KeyGen: %f EncodeEncryption: %f Eval: %f Decrpt: %f\n", 
             tmem/1024.0, nbp, n_ctx, he.getPackingFactor(), he.getRingDim(), nMults,
             tPre.count(), tKG.count(), tEnc.count(), tEvalAll.count(), tDec.count());
-    
+
     return 0;
 }

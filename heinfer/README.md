@@ -15,6 +15,6 @@ e.g., ./preprocess test.bin /data/test.fa
 
 ## CNN Classifier
 ```
-./main test.bin model.742
+./main test.bin model.1053
 ```
 with a Keras-trained model in HDF5 format and a model descriptor.

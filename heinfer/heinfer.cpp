@@ -59,7 +59,7 @@ HEInfer::HEInfer(int ninf_, int nbp_, int nMults_, int depth_, int sf_, int fmod
     printf("Initialized Palisade Cryptocontext...\n");
     printf("   NBP  : %d\n", nbp);
     printf("   NINF : %d\n", ninf);
-    printf("   nMults=%d, MaxDepth=%d, ScaleFactor=%d, DecryptBits=%d\n", nMults, maxdepth, scaleFactor, firstModSize);
+    printf("   nMults= %d MaxDepth= %d ScaleFactor= %d DecryptBits= %d\n", nMults, maxdepth, scaleFactor, firstModSize);
 
     cc = CryptoContextFactory<DCRTPoly>::genCryptoContextCKKS(
             nMults, scaleFactor, 0 /*batch*/, securityLevel, ringDim,
